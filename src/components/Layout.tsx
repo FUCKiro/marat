@@ -11,9 +11,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <header className="bg-teal-600 text-white">
         <nav className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <a href="/" className="flex items-center space-x-2">
-              <Heart className="w-8 h-8" />
-              <span className="text-xl font-semibold">Maratonda</span>
+            <a href="/" className="flex items-center space-x-3">
+              <img 
+                src="https://res.cloudinary.com/dlc5g3cjb/image/upload/v1733848053/Maratonda_logo_tz9x92.png"
+                alt="Maratonda Logo"
+                className="w-12 h-12 rounded-full"
+              />
+              <span className="text-xl font-bold">Maratonda</span>
             </a>
             <div className="hidden md:flex space-x-6">
               {navigation.map((item) => (
