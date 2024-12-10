@@ -1,6 +1,6 @@
 import React from 'react';
 import { navigation } from '../data/navigation';
-import { Heart, Menu, X } from 'lucide-react';
+import { Heart, Menu, X, Facebook, Instagram, Linkedin, Twitter } from 'lucide-react';
 import { useState } from 'react';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
@@ -64,12 +64,26 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
       <footer className="bg-teal-800 text-white py-8">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
               <h3 className="text-lg font-semibold mb-4">Maratonda</h3>
               <p className="text-teal-200">
                 Supportiamo il benessere delle persone neurodiverse attraverso un approccio integrato e personalizzato.
               </p>
+              <div className="flex space-x-4 mt-4">
+                <a href="#" className="text-teal-200 hover:text-white transition-colors">
+                  <Facebook className="w-5 h-5" />
+                </a>
+                <a href="#" className="text-teal-200 hover:text-white transition-colors">
+                  <Instagram className="w-5 h-5" />
+                </a>
+                <a href="#" className="text-teal-200 hover:text-white transition-colors">
+                  <Linkedin className="w-5 h-5" />
+                </a>
+                <a href="#" className="text-teal-200 hover:text-white transition-colors">
+                  <Twitter className="w-5 h-5" />
+                </a>
+              </div>
             </div>
             <div>
               <h3 className="text-lg font-semibold mb-4">Contatti</h3>
@@ -77,15 +91,32 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <p className="text-teal-200">Tel: +39 123 456 7890</p>
             </div>
             <div>
+              <h3 className="text-lg font-semibold mb-4">Partner Istituzionali</h3>
+              <div className="space-y-4">
+                <img 
+                  src="https://www.salutelazio.it/documents/10182/186562/logo_regione_lazio.png" 
+                  alt="Regione Lazio"
+                  className="h-12 object-contain"
+                />
+                <img 
+                  src="https://www.aslroma1.it/flex/images/D.2336d8f5c3808cdf7873/Logo_ASLRoma1.png" 
+                  alt="ASL Roma 1"
+                  className="h-12 object-contain"
+                />
+              </div>
+            </div>
+            <div>
               <h3 className="text-lg font-semibold mb-4">Orari</h3>
               <p className="text-teal-200">Lun - Ven: 9:00 - 18:00</p>
               <p className="text-teal-200">Sab: 9:00 - 13:00</p>
             </div>
           </div>
-          <div className="mt-8 pt-8 border-t border-teal-700 text-center text-teal-200">
+          <div className="mt-8 pt-8 border-t border-teal-700 flex flex-col md:flex-row justify-between items-center text-teal-200">
             <p>&copy; {new Date().getFullYear()} Maratonda. Tutti i diritti riservati.</p>
-            <p className="mt-2">
-              Sviluppato da{' '}
+            <div className="flex items-center space-x-4 mt-4 md:mt-0">
+              <a href="/privacy" className="hover:text-white transition-colors">Privacy Policy</a>
+              <span className="mx-4">|</span>
+              <span>Progetto grafico di </span>
               <a 
                 href="https://fabiolarocca.dev/" 
                 target="_blank" 
@@ -94,7 +125,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               >
                 Fabio La Rocca
               </a>
-            </p>
+            </div>
           </div>
         </div>
       </footer>

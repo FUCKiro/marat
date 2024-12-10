@@ -6,6 +6,7 @@ import ChiSiamo from './pages/ChiSiamo.tsx';
 import CosaFacciamo from './pages/CosaFacciamo.tsx';
 import Team from './pages/Team.tsx';
 import Contatti from './pages/Contatti.tsx';
+import Privacy from './pages/Privacy.tsx';
 import './index.css';
 
 const router = createBrowserRouter([
@@ -14,6 +15,7 @@ const router = createBrowserRouter([
   { path: '/cosa-facciamo', element: <CosaFacciamo /> },
   { path: '/team', element: <Team /> },
   { path: '/contatti', element: <Contatti /> },
+  { path: '/privacy', element: <Privacy /> },
 ]);
 
 createRoot(document.getElementById('root')!).render(
