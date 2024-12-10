@@ -15,3 +15,9 @@ export interface TeamMember {
   image: string;
   description: string;
 }
+
+export interface Collaborator {
+  name: string;
+  role: string;
+  image: string;
+}

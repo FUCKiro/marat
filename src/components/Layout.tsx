@@ -84,6 +84,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </div>
           <div className="mt-8 pt-8 border-t border-teal-700 text-center text-teal-200">
             <p>&copy; {new Date().getFullYear()} Maratonda. Tutti i diritti riservati.</p>
+            <p className="mt-2">
+              Sviluppato da{' '}
+              <a 
+                href="https://fabiolarocca.dev/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-white hover:text-teal-100 transition-colors"
+              >
+                Fabio La Rocca
+              </a>
+            </p>
           </div>
         </div>
       </footer>
