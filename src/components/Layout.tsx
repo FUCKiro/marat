@@ -2,6 +2,7 @@ import React from 'react';
 import { navigation } from '../data/navigation';
 import { Heart, Menu, X, Facebook, Instagram, Linkedin, Twitter } from 'lucide-react';
 import { useState } from 'react';
+import CookieConsent from './CookieConsent';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -133,6 +134,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       </footer>
+      <CookieConsent />
     </div>
   );
 }
