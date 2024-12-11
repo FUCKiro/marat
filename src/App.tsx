@@ -1,6 +1,6 @@
 import React from 'react';
 import Layout from './components/Layout';
-import { Heart, Brain, Users, Sparkles, Activity, ArrowRight } from 'lucide-react';
+import { ArrowRight, Heart, Brain, Users, Sparkles, Activity, MessageSquare, GraduationCap, BookOpen } from 'lucide-react';
 import { services } from './data/services';
 import Hero3D from './components/Hero3D';
 
@@ -18,8 +18,17 @@ function App() {
             <p className="text-2xl mb-4">
               Valorizziamo la Neurodiversità
             </p>
-            <p className="text-xl mb-12 opacity-90">
-              Un percorso di crescita insieme, passo dopo passo
+            <blockquote className="text-xl mb-12 max-w-2xl mx-auto">
+              <p className="italic mb-4">
+                "Qui devi correre più che puoi per restare nello stesso posto.
+              </p>
+              <p className="italic mb-6">
+                Se vuoi andare da qualche parte devi correre almeno il doppio!"
+              </p>
+              <div className="w-16 h-1 bg-white/30 mx-auto"></div>
+            </blockquote>
+            <p className="text-lg mb-12 opacity-90">
+              Un percorso di crescita insieme, passo dopo passo.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
@@ -53,8 +62,11 @@ function App() {
                 Brain,
                 Users,
                 Sparkles,
-                Activity
-              }[service.icon as keyof typeof icons];
+                Activity,
+                MessageSquare,
+                GraduationCap,
+                BookOpen
+              }[service.icon];
 
               return (
                 <div key={service.title} className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow">

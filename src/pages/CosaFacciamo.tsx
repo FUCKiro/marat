@@ -1,12 +1,16 @@
 import React from 'react';
 import Layout from '../components/Layout';
+import type { Service } from '../types';
 import { services } from '../data/services';
-import { Heart, Brain, Users, Sparkles, Activity } from 'lucide-react';
+import { Heart, Brain, Users, Sparkles, Activity, MessageSquare, GraduationCap, BookOpen } from 'lucide-react';
 import PageBackground3D from '../components/PageBackground3D';
+import ServiceModal from '../components/ServiceModal';
 import ScrollAnimation from '../components/ScrollAnimation';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function CosaFacciamo() {
-  const icons = { Heart, Brain, Users, Sparkles, Activity };
+  const [selectedService, setSelectedService] = useState<Service | null>(null);
 
   return (
     <Layout>
@@ -23,31 +27,48 @@ export default function CosaFacciamo() {
       <div className="container mx-auto px-4 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
           {services.map((service) => {
-            const IconComponent = icons[service.icon as keyof typeof icons];
+            const IconComponent = {
+              Heart,
+              Brain,
+              Users,
+              Sparkles,
+              Activity,
+              MessageSquare,
+              GraduationCap,
+              BookOpen
+            }[service.icon];
             
             return (
-              <ScrollAnimation key={service.title} className="bg-white p-8 rounded-lg shadow-lg">
-                <div className="flex items-center mb-6">
-                  <div className="w-12 h-12 bg-teal-100 rounded-full flex items-center justify-center mr-4">
-                    <IconComponent className="w-6 h-6 text-teal-600" />
+              <ScrollAnimation
+                key={service.title} 
+                className="bg-white p-8 rounded-lg shadow-lg transform transition-all hover:scale-105"
+              >
+                <div 
+                  className="cursor-pointer" 
+                  onClick={() => setSelectedService(service)}
+                >
+                  <div className="flex items-center mb-6">
+                    <div className="w-12 h-12 bg-teal-100 rounded-full flex items-center justify-center mr-4">
+                      {IconComponent && <IconComponent className="w-6 h-6 text-teal-600" />}
+                    </div>
+                    <h2 className="text-2xl font-bold text-gray-800">{service.title}</h2>
                   </div>
-                  <h2 className="text-2xl font-bold text-gray-800">{service.title}</h2>
+                  <p className="text-gray-700 mb-6">{service.description}</p>
+                  <ul className="space-y-3 text-gray-700">
+                    <li className="flex items-center">
+                      <span className="w-2 h-2 bg-teal-500 rounded-full mr-3"></span>
+                      Valutazione iniziale personalizzata
+                    </li>
+                    <li className="flex items-center">
+                      <span className="w-2 h-2 bg-teal-500 rounded-full mr-3"></span>
+                      Piano di intervento su misura
+                    </li>
+                    <li className="flex items-center">
+                      <span className="w-2 h-2 bg-teal-500 rounded-full mr-3"></span>
+                      Monitoraggio costante dei progressi
+                    </li>
+                  </ul>
                 </div>
-                <p className="text-gray-700 mb-6">{service.description}</p>
-                <ul className="space-y-3 text-gray-700">
-                  <li className="flex items-center">
-                    <span className="w-2 h-2 bg-teal-500 rounded-full mr-3"></span>
-                    Valutazione iniziale personalizzata
-                  </li>
-                  <li className="flex items-center">
-                    <span className="w-2 h-2 bg-teal-500 rounded-full mr-3"></span>
-                    Piano di intervento su misura
-                  </li>
-                  <li className="flex items-center">
-                    <span className="w-2 h-2 bg-teal-500 rounded-full mr-3"></span>
-                    Monitoraggio costante dei progressi
-                  </li>
-                </ul>
               </ScrollAnimation>
             );
           })}
@@ -88,6 +109,24 @@ export default function CosaFacciamo() {
           </div>
         </div>
       </div>
+
+      {/* Modal */}
+      <AnimatePresence>
+        {selectedService && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+            onClick={() => setSelectedService(null)}
+          >
+            <ServiceModal 
+              service={selectedService} 
+              onClose={() => setSelectedService(null)} 
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </Layout>
   );
 }

@@ -1,3 +1,5 @@
+import { IconName } from '../data/icons';
+
 export interface NavItem {
   title: string;
   href: string;
@@ -6,7 +8,8 @@ export interface NavItem {
 export interface Service {
   title: string;
   description: string;
-  icon: string;
+  fullDescription: string;
+  icon: IconName;
 }
 
 export interface TeamMember {
