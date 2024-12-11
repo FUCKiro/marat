@@ -5,6 +5,7 @@ import { collaborators } from '../data/collaborators';
 import { Users } from 'lucide-react';
 import PageBackground3D from '../components/PageBackground3D';
 import ScrollAnimation from '../components/ScrollAnimation';
+import HoverCard from '../components/HoverCard';
 
 export default function Team() {
   return (
@@ -34,20 +35,15 @@ export default function Team() {
             <ScrollAnimation 
               key={member.name} 
               delay={index * 0.2} 
-              className="bg-white rounded-lg shadow-lg overflow-hidden"
             >
-              <div className="aspect-w-16 aspect-h-9">
-                <img
-                  src={member.image}
-                  alt={member.name}
-                  className="w-full h-48 object-cover"
-                />
-              </div>
-              <div className="p-6">
-                <h3 className="text-2xl font-bold text-gray-800 mb-2">{member.name}</h3>
-                <p className="text-teal-600 font-semibold mb-4">{member.role}</p>
-                <p className="text-gray-700">{member.description}</p>
-              </div>
+              <HoverCard
+                image={member.image}
+                name={member.name}
+                role={member.role}
+                briefDescription={member.briefDescription}
+                fullDescription={member.fullDescription}
+                className="shadow-lg"
+              />
             </ScrollAnimation>
           ))}
         </div>
@@ -64,19 +60,15 @@ export default function Team() {
             <ScrollAnimation
               key={collaborator.name}
               delay={index * 0.1}
-              className="bg-white rounded-lg shadow-lg overflow-hidden"
             >
-              <div className="aspect-square">
-                <img
-                  src={collaborator.image}
-                  alt={collaborator.name}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="p-4">
-                <h3 className="text-lg font-bold text-gray-800 mb-1">{collaborator.name}</h3>
-                <p className="text-teal-600 text-sm font-semibold">{collaborator.role}</p>
-              </div>
+              <HoverCard
+                image={collaborator.image}
+                name={collaborator.name}
+                role={collaborator.role}
+                briefDescription={collaborator.briefDescription}
+                fullDescription={collaborator.fullDescription}
+                className="shadow-lg"
+              />
             </ScrollAnimation>
           ))}
         </div>

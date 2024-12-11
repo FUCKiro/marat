@@ -13,11 +13,14 @@ export interface TeamMember {
   name: string;
   role: string;
   image: string;
-  description: string;
+  briefDescription: string;
+  fullDescription: string;
 }
 
 export interface Collaborator {
   name: string;
   role: string;
   image: string;
+  briefDescription: string;
+  fullDescription: string;
 }

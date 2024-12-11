@@ -18,7 +18,7 @@ export default function ChiSiamo() {
       <div className="container mx-auto px-4 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
           <ScrollAnimation>
-            <h2 className="text-3xl font-bold mb-6 text-gray-800">La Nostra Storia</h2>
+            <h2 className="text-3xl font-bold mb-6 text-white">La Nostra Storia</h2>
             <p className="text-white/80 mb-4">
               Maratonda nasce dalla passione e dall'impegno di un gruppo di professionisti
               che credono nel valore della neurodiversità. Dal 2015, lavoriamo per creare
@@ -31,15 +31,17 @@ export default function ChiSiamo() {
               individuo che si rivolge a noi.
             </p>
           </ScrollAnimation>
-          <ScrollAnimation delay={0.2} className="bg-teal-100 p-8 rounded-lg">
-            <div className="flex items-center justify-center">
-              <Users className="w-32 h-32 text-teal-600" />
-            </div>
+          <ScrollAnimation delay={0.2}>
+            <img
+              src="https://res.cloudinary.com/dlc5g3cjb/image/upload/v1733930120/grupmar_iwuta6.jpg"
+              alt="Il team di Maratonda"
+              className="w-full h-auto rounded-lg shadow-xl"
+            />
           </ScrollAnimation>
         </div>
 
         <div className="mt-16">
-          <h2 className="text-3xl font-bold mb-8 text-gray-800 text-center">I Nostri Valori</h2>
+          <h2 className="text-3xl font-bold mb-8 text-white text-center">I Nostri Valori</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <ScrollAnimation delay={0.3} className="bg-white p-6 rounded-lg shadow-lg">
               <h3 className="text-xl font-semibold mb-4 text-teal-600">Rispetto</h3>
