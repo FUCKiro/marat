@@ -3,10 +3,12 @@ import Layout from './components/Layout';
 import { ArrowRight, Heart, Brain, Users, Sparkles, Activity, MessageSquare, GraduationCap, BookOpen } from 'lucide-react';
 import { services } from './data/services';
 import Hero3D from './components/Hero3D';
+import SEO from './components/SEO';
 
 function App() {
   return (
     <Layout>
+      <SEO />
       {/* Hero Section */}
       <section className="relative min-h-[90vh] text-white flex items-center">
         <Hero3D />

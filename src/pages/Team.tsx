@@ -6,10 +6,16 @@ import { Users } from 'lucide-react';
 import PageBackground3D from '../components/PageBackground3D';
 import ScrollAnimation from '../components/ScrollAnimation';
 import HoverCard from '../components/HoverCard';
+import SEO from '../components/SEO';
 
 export default function Team() {
   return (
     <Layout>
+      <SEO
+        title="Il Nostro Team"
+        description="Conosci il team di professionisti di Maratonda: psicologi, terapisti, logopedisti ed educatori specializzati nel supporto alle persone neurodiverse."
+        type="article"
+      />
       <div className="bg-teal-600 text-white py-16">
         <PageBackground3D pattern="grid" />
         <div className="container mx-auto px-4">

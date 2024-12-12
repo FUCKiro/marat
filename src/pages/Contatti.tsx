@@ -10,6 +10,7 @@ interface FormData {
   email: string;
   message: string;
 }
+import SEO from '../components/SEO';
 
 export default function Contatti() {
   const [formData, setFormData] = useState<FormData>({
@@ -42,6 +43,11 @@ export default function Contatti() {
 
   return (
     <Layout>
+      <SEO
+        title="Contatti"
+        description="Contatta Maratonda per informazioni sui nostri servizi. Siamo a Roma e offriamo supporto specialistico per persone neurodiverse e le loro famiglie."
+        type="article"
+      />
       <div className="bg-teal-600 text-white py-16">
         <PageBackground3D pattern="circles" />
         <div className="container mx-auto px-4">

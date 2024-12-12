@@ -3,10 +3,16 @@ import Layout from '../components/Layout';
 import { Users } from 'lucide-react';
 import PageBackground3D from '../components/PageBackground3D';
 import ScrollAnimation from '../components/ScrollAnimation';
+import SEO from '../components/SEO';
 
 export default function ChiSiamo() {
   return (
     <Layout>
+      <SEO
+        title="Chi Siamo"
+        description="Maratonda è un'associazione dedicata al supporto delle persone neurodiverse, offrendo servizi specialistici e un ambiente accogliente per la crescita e lo sviluppo personale."
+        type="article"
+      />
       <div className="bg-teal-600 text-white py-16">
         <PageBackground3D pattern="circles" />
         <div className="container mx-auto px-4">

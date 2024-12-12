@@ -7,6 +7,7 @@ import PageBackground3D from '../components/PageBackground3D';
 import ServiceModal from '../components/ServiceModal';
 import ScrollAnimation from '../components/ScrollAnimation';
 import { useState } from 'react';
+import SEO from '../components/SEO';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function CosaFacciamo() {
@@ -14,6 +15,11 @@ export default function CosaFacciamo() {
 
   return (
     <Layout>
+      <SEO
+        title="Cosa Facciamo"
+        description="Scopri i servizi specialistici di Maratonda: ABA, psicoterapia, neuropsicomotricità, logopedia e molto altro. Interventi personalizzati per il benessere delle persone neurodiverse."
+        type="article"
+      />
       <div className="bg-teal-600 text-white py-16">
         <PageBackground3D pattern="waves" />
         <div className="container mx-auto px-4">
