@@ -30,17 +30,17 @@ export default function HoverCard({ image, name, role, briefDescription, fullDes
       <div className="p-6 bg-white h-[276px]">
         <h3 className="text-2xl font-bold text-gray-800 mb-2">{name}</h3>
         <p className="text-teal-600 font-semibold">{role}</p>
-        <p className="text-gray-600 mt-3 text-sm">{briefDescription}</p>
+        <p className="text-gray-600 mt-2 text-sm leading-tight">{briefDescription}</p>
       </div>
       
       {fullDescription && (
         <motion.div
-          className="absolute inset-0 bg-teal-600/95 p-6 flex items-center justify-center text-white text-center"
+          className="absolute inset-0 bg-teal-600/95 p-4 md:p-6 flex items-center justify-center text-white text-center"
           initial={{ opacity: 0 }}
           animate={{ opacity: isHovered ? 1 : 0 }}
           transition={{ duration: 0.2 }}
         >
-          <p>{fullDescription}</p>
+          <p className="text-sm md:text-base leading-tight md:leading-relaxed">{fullDescription}</p>
         </motion.div>
       )}
     </motion.div>

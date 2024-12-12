@@ -6,14 +6,14 @@ export const collaborators: Collaborator[] = [
     role: 'Logopedista',
     image: 'https://res.cloudinary.com/dlc5g3cjb/image/upload/v1733928723/giaie_coxegb.webp',
     briefDescription: 'Laureata in Logopedia presso l\'Università Cattolica del Sacro Cuore',
-    fullDescription: 'Laureata in Logopedia presso l\'Università Cattolica del Sacro Cuore, si occupa di valutazione e trattamento dei disturbi comunicativo-linguistici, dell\'apprendimento e della deglutizione in età evolutiva, adulta e geriatrica. Possiede conoscenze di base di ABA (terapista ABA) e una formazione specifica sulla presa in carico del paziente adulto neurologico. Ha frequentato il Workshop di introduzione alla Tecnica PROMPT®, implementatrice del Picture Exchange Communication System (PECS) e dell\'Oral Motor Therapy.'
+    fullDescription: 'Laureata in Logopedia presso l\'Università Cattolica del Sacro Cuore, si dedica alla valutazione e al trattamento di disturbi comunicativo-linguistici, dell\'apprendimento e della deglutizione in età evolutiva, adulta e geriatrica. Ha competenze di base in ABA, formazione specifica sulla gestione del paziente adulto neurologico e ha frequentato il Workshop di introduzione alla Tecnica PROMPT®. È implementatrice del PECS e dell\'Oral Motor Therapy.'
   },
   {
     name: 'Claudio Bartoloni',
     role: 'Consulenze esterne - Supervisori ABA',
     image: 'https://res.cloudinary.com/dlc5g3cjb/image/upload/v1733928720/claba_ardhcv.webp',
     briefDescription: 'Analista del comportamento certificato (BCBA®️)',
-    fullDescription: 'Laureato in Psicologia Clinica e della Salute presso l\'Università degli studi di Firenze si è successivamente formato in analisi comportamentale applicata (ABA) con il Florida Institute of Technology. Attualmente lavora come Analista del comportamento certificato (BCBA®️) occupandosi di interventi individualizzati basati sull\'applicazione dei principi e tecniche ABA (Applied Behaviour Analysis) per persone nello spettro autistico, altre disabilità e formazione di team di lavoro, e studenti in via di certificazione.'
+    fullDescription: 'Laureato in Psicologia Clinica e della Salute presso l\'Università di Firenze, si è specializzato in Analisi Comportamentale Applicata (ABA) con il Florida Institute of Technology. Attualmente opera come Analista del Comportamento certificato (BCBA®️), progettando interventi individualizzati basati sui principi ABA per persone nello spettro autistico e altre disabilità, e formando team di lavoro e studenti in certificazione.'
   },
   {
     name: 'Giulia Petrocchi',
