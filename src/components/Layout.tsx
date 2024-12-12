@@ -92,8 +92,18 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </div>
             <div>
               <h3 className="text-lg font-semibold mb-4">Contatti</h3>
-              <p className="text-teal-200">Email: info@maratonda.it</p>
-              <p className="text-teal-200">Tel: +39 123 456 7890</p>
+              <p className="text-teal-200">Email: associazionemaratonda@gmail.com</p>
+              <p className="text-teal-200">Tel: +39 351 479 0620</p>
+              <div className="mt-2">
+                <p className="text-teal-200 font-semibold">Sede Nomentana:</p>
+                <p className="text-teal-200">Via Nomentana, 430</p>
+                <p className="text-teal-200">00141 Roma</p>
+              </div>
+              <div className="mt-2">
+                <p className="text-teal-200 font-semibold">Sede Pasinetti:</p>
+                <p className="text-teal-200">Via F. Pasinetti, 48</p>
+                <p className="text-teal-200">00139 Roma</p>
+              </div>
             </div>
             <div>
               <h3 className="text-lg font-semibold mb-4">Partner Istituzionali</h3>

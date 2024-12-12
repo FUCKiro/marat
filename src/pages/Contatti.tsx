@@ -68,8 +68,12 @@ export default function Contatti() {
                 <div>
                   <h3 className="text-xl font-semibold mb-2 text-gray-800">Indirizzo</h3>
                   <p className="text-gray-700">
-                    Via Example, 123<br />
-                    00100 Roma, Italia
+                    <strong>Sede Nomentana:</strong><br />
+                    Via Nomentana, 430<br />
+                    00141 Roma<br /><br />
+                    <strong>Sede Pasinetti:</strong><br />
+                    Via F. Pasinetti, 48<br />
+                    00139 Roma
                   </p>
                 </div>
               </div>
@@ -78,7 +82,7 @@ export default function Contatti() {
                 <Phone className="w-6 h-6 text-teal-600 mt-1 mr-4" />
                 <div>
                   <h3 className="text-xl font-semibold mb-2 text-gray-800">Telefono</h3>
-                  <p className="text-gray-700">+39 123 456 7890</p>
+                  <p className="text-gray-700">+39 351 479 0620</p>
                 </div>
               </div>
 
@@ -86,7 +90,7 @@ export default function Contatti() {
                 <Mail className="w-6 h-6 text-teal-600 mt-1 mr-4" />
                 <div>
                   <h3 className="text-xl font-semibold mb-2 text-gray-800">Email</h3>
-                  <p className="text-gray-700">info@maratonda.it</p>
+                  <p className="text-gray-700">associazionemaratonda@gmail.com</p>
                 </div>
               </div>
 
