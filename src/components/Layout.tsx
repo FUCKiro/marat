@@ -107,18 +107,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </div>
             <div>
               <h3 className="text-lg font-semibold mb-4">Partner Istituzionali</h3>
-              <div className="space-y-4">
-                <img 
-                  src="https://www.salutelazio.it/documents/10182/186562/logo_regione_lazio.png" 
-                  alt="Regione Lazio"
-                  className="h-12 object-contain"
-                />
-                <img 
-                  src="https://www.aslroma1.it/flex/images/D.2336d8f5c3808cdf7873/Logo_ASLRoma1.png" 
-                  alt="ASL Roma 1"
-                  className="h-12 object-contain"
-                />
-              </div>
+              <p className="text-teal-200 italic">Coming Soon</p>
             </div>
             <div>
               <h3 className="text-lg font-semibold mb-4">Orari</h3>
