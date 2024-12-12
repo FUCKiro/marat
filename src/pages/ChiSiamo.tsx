@@ -18,24 +18,39 @@ export default function ChiSiamo() {
       <div className="container mx-auto px-4 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
           <ScrollAnimation>
-            <h2 className="text-3xl font-bold mb-6 text-white">La Nostra Storia</h2>
+            <h2 className="text-3xl font-bold mb-6 text-white">Chi Siamo</h2>
             <p className="text-white/80 mb-4">
-              Maratonda nasce dalla passione e dall'impegno di un gruppo di professionisti
-              che credono nel valore della neurodiversità. Dal 2015, lavoriamo per creare
-              un ambiente inclusivo e supportivo dove ogni persona possa esprimere
-              il proprio potenziale.
+              L'Associazione Maratonda è nata dall'esperienza di professioniste nel settore neuropsicologico,
+              con l'obiettivo di creare uno spazio accogliente e condiviso per bambini, adolescenti,
+              adulti e le loro famiglie. Ogni percorso è personalizzato, rispettando le unicità e
+              accompagnando ciascuno lungo traiettorie di sviluppo uniche e irripetibili.
             </p>
             <p className="text-white/80">
-              Il nostro approccio integrato combina diverse discipline e competenze,
-              permettendoci di offrire un supporto completo e personalizzato a ogni
-              individuo che si rivolge a noi.
+              Maratonda accoglie l'individuo nella sua unicità, valorizzando le potenzialità nascoste
+              e offrendo un ambiente in cui queste possano emergere e fiorire.
+            </p>
+            <p className="text-white/80 mt-4">
+              L'associazione fornisce servizi specialistici in ambito clinico neuropsicologico,
+              tra cui diagnosi, valutazioni e trattamenti neuropsicologici, psicoeducativi,
+              neuropsicomotori e logopedici, con un'attenzione particolare a chi vive una
+              condizione di neurodiversità.
+            </p>
+            <p className="text-white/80 mt-4">
+              Oltre ai servizi clinici, Maratonda promuove attività esperienziali, ricreative
+              e di integrazione sociale e lavorativa. L'autonomia, l'inclusione e la costruzione
+              di relazioni significative sono al centro della sua missione, per migliorare il
+              benessere psicofisico e la qualità di vita di ogni individuo.
+            </p>
+            <p className="text-white/80 mt-4">
+              Maratonda combina professionalità e umanità, trasformando i suoi spazi in luoghi
+              di socialità e crescita, dove ognuno trova il proprio posto per esprimersi al meglio.
             </p>
           </ScrollAnimation>
           <ScrollAnimation delay={0.2}>
             <img
               src="https://res.cloudinary.com/dlc5g3cjb/image/upload/v1733930120/grupmar_iwuta6.jpg"
               alt="Il team di Maratonda"
-              className="w-full h-auto rounded-lg shadow-xl"
+              className="w-full h-auto rounded-lg shadow-xl object-cover"
             />
           </ScrollAnimation>
         </div>
