@@ -29,7 +29,7 @@ export default function Hero3D() {
           enableZoom={false}
           enablePan={false}
           autoRotate
-          autoRotateSpeed={0.5}
+          autoRotateSpeed={2}
           maxPolarAngle={Math.PI / 2}
           minPolarAngle={Math.PI / 3}
         />
