@@ -68,12 +68,9 @@ export default function Contatti() {
                 <div>
                   <h3 className="text-xl font-semibold mb-2 text-gray-800">Indirizzo</h3>
                   <p className="text-gray-700">
-                    <strong>Sede Nomentana:</strong><br />
-                    Via Nomentana, 430<br />
-                    00141 Roma<br /><br />
-                    <strong>Sede Pasinetti:</strong><br />
-                    Via F. Pasinetti, 48<br />
-                    00139 Roma
+                    <strong>Sede:</strong><br />
+                    Largo Bacone, 16<br />
+                    00137 Roma
                   </p>
                 </div>
               </div>

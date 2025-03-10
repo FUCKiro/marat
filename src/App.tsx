@@ -10,29 +10,17 @@ function App() {
     <Layout>
       <SEO />
       {/* Hero Section */}
-      <section className="relative min-h-[90vh] text-white flex items-center">
+      <section className="relative min-h-[90vh] text-white flex items-center pt-24">
         <Hero3D />
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-3xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">
+            <h1 className="text-4xl md:text-5xl font-bold mb-12">
               Maratonda
             </h1>
-            <p className="text-2xl mb-4">
-              Valorizziamo la Neurodiversità
+            <p className="text-2xl mb-16 font-light">
+              Per ogni mente in crescita, un percorso su misura
             </p>
-            <blockquote className="text-xl mb-12 max-w-2xl mx-auto">
-              <p className="italic mb-4">
-                "Qui devi correre più che puoi per restare nello stesso posto.
-              </p>
-              <p className="italic mb-6">
-                Se vuoi andare da qualche parte devi correre almeno il doppio!"
-              </p>
-              <div className="w-16 h-1 bg-white/30 mx-auto"></div>
-            </blockquote>
-            <p className="text-lg mb-12 opacity-90">
-              Un percorso di crescita insieme, passo dopo passo.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-6 justify-center">
               <a
                 href="/contatti"
                 className="group bg-white/90 backdrop-blur-sm text-teal-600 px-8 py-3 rounded-full font-semibold hover:bg-white transition-all inline-flex items-center justify-center"
