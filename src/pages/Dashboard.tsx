@@ -2,8 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Layout from '../components/Layout';
+import { utils, writeFile } from 'xlsx';
 import { db } from '../config/firebase';
-import { collection, query, where, getDocs, Timestamp, setDoc, doc, addDoc, deleteDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, Timestamp, setDoc, doc, addDoc, deleteDoc, startOfMonth, endOfMonth } from 'firebase/firestore';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { Visit, User } from '../types';
 import SEO from '../components/SEO';
@@ -36,9 +37,99 @@ export default function Dashboard() {
     name: ''
   });
   const [deletingUser, setDeletingUser] = useState<string | null>(null);
-
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [exporting, setExporting] = useState(false);
+
+  const exportVisitsToExcel = async () => {
+    if (!currentUser?.role === 'admin') return;
+    setExporting(true);
+
+    try {
+      // Get current month's start and end dates
+      const now = new Date();
+      const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+      const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+      // Query visits for current month
+      const visitsRef = collection(db, 'visits');
+      const q = query(visitsRef,
+        where('date', '>=', Timestamp.fromDate(firstDay)),
+        where('date', '<=', Timestamp.fromDate(lastDay))
+      );
+      const querySnapshot = await getDocs(q);
+      
+      // Process visits data
+      const visitsData = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        date: (doc.data().date as Timestamp).toDate(),
+      }));
+
+      // Create operator summary
+      const operatorSummary = {};
+      visitsData.forEach(visit => {
+        if (!operatorSummary[visit.operatorId]) {
+          operatorSummary[visit.operatorId] = {
+            name: usersMap[visit.operatorId]?.name || 'Operatore sconosciuto',
+            totalMinutes: 0,
+            visits: []
+          };
+        }
+        operatorSummary[visit.operatorId].totalMinutes += visit.duration;
+        operatorSummary[visit.operatorId].visits.push({
+          date: visit.date.toLocaleDateString(),
+          patient: patientsMap[visit.patientId]?.name || 'Paziente sconosciuto',
+          duration: visit.duration
+        });
+      });
+
+      // Prepare Excel data
+      const worksheets = [];
+      
+      // Summary worksheet
+      const summaryData = Object.entries(operatorSummary).map(([_, data]: [string, any]) => ({
+        'Operatore': data.name,
+        'Ore Totali': (data.totalMinutes / 60).toFixed(2),
+        'Numero Visite': data.visits.length
+      }));
+      
+      const summaryWs = utils.json_to_sheet(summaryData);
+      worksheets.push(['Riepilogo', summaryWs]);
+
+      // Detail worksheet
+      const detailData = visitsData.map(visit => ({
+        'Data': visit.date.toLocaleDateString(),
+        'Operatore': usersMap[visit.operatorId]?.name || 'Operatore sconosciuto',
+        'Paziente': patientsMap[visit.patientId]?.name || 'Paziente sconosciuto',
+        'Durata (minuti)': visit.duration,
+        'Durata (ore)': (visit.duration / 60).toFixed(2)
+      }));
+
+      const detailWs = utils.json_to_sheet(detailData);
+      worksheets.push(['Dettaglio Visite', detailWs]);
+
+      // Create workbook
+      const wb = utils.book_new();
+      worksheets.forEach(([name, ws]) => {
+        utils.book_append_sheet(wb, ws, name);
+      });
+
+      // Generate filename with current month and year
+      const monthNames = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
+        'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
+      const fileName = `Visite_${monthNames[now.getMonth()]}_${now.getFullYear()}.xlsx`;
+
+      // Save file
+      writeFile(wb, fileName);
+      setSuccess('Report esportato con successo');
+    } catch (error) {
+      console.error('Error exporting visits:', error);
+      setError('Errore durante l\'esportazione del report');
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const handleDeleteUser = async (userId: string) => {
     if (!window.confirm('Sei sicuro di voler eliminare questo utente?')) {
@@ -537,8 +628,17 @@ export default function Dashboard() {
             <div className="bg-white shadow overflow-hidden sm:rounded-lg">
               <div className="px-4 py-5 sm:px-6">
                 <h2 className="text-lg leading-6 font-medium text-gray-900">
-                  Visite {currentUser?.role === 'admin' ? 'del mese' : ''}
+                  Visite {currentUser?.role === 'admin' && 'del mese'}
                 </h2>
+                {currentUser?.role === 'admin' && (
+                  <button
+                    onClick={exportVisitsToExcel}
+                    disabled={exporting}
+                    className="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-50"
+                  >
+                    {exporting ? 'Esportazione in corso...' : 'Esporta in Excel'}
+                  </button>
+                )}
               </div>
               <div className="border-t border-gray-200">
                 <ul className="divide-y divide-gray-200">
