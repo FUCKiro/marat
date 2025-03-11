@@ -30,7 +30,7 @@ export interface Collaborator {
 
 export interface User {
   id: string;
-  email: string;
+  email?: string;
   role: 'admin' | 'operator' | 'patient';
   name: string;
   createdAt: Date;
