@@ -27,3 +27,21 @@ export interface Collaborator {
   briefDescription: string;
   fullDescription: string;
 }
+
+export interface User {
+  id: string;
+  email: string;
+  role: 'admin' | 'operator' | 'patient';
+  name: string;
+  createdAt: Date;
+}
+
+export interface Visit {
+  id: string;
+  operatorId: string;
+  patientId: string;
+  date: Date;
+  duration: number; // in minutes
+  notes?: string;
+  createdAt: Date;
+}
