@@ -40,7 +40,7 @@ export default function AdminDashboard({
     <>
       <div className="mb-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 mb-6">
-          <h2 className="text-2xl font-semibold text-gray-800">Gestione</h2>
+          <h2 className="text-2xl font-semibold text-gray-800">Gestione Utenti</h2>
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full sm:w-auto">
             <button
               onClick={() => {
@@ -79,11 +79,26 @@ export default function AdminDashboard({
           />
         )}
 
-        <UsersList
-          users={users}
-          onDeleteUser={onDeleteUser}
-          deletingUser={deletingUser}
-        />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div>
+            <UsersList
+              users={users}
+              type="operators"
+              title="Lista Operatori"
+              onDeleteUser={onDeleteUser}
+              deletingUser={deletingUser}
+            />
+          </div>
+          <div>
+            <UsersList
+              users={users}
+              type="patients"
+              title="Lista Pazienti"
+              onDeleteUser={onDeleteUser}
+              deletingUser={deletingUser}
+            />
+          </div>
+        </div>
       </div>
 
       <VisitsList
