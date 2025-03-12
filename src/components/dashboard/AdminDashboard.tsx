@@ -39,15 +39,15 @@ export default function AdminDashboard({
   return (
     <>
       <div className="mb-8">
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 mb-6">
           <h2 className="text-2xl font-semibold text-gray-800">Gestione</h2>
-          <div className="space-x-4">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full sm:w-auto">
             <button
               onClick={() => {
                 setShowAddOperator(!showAddOperator);
                 setShowAddPatient(false);
               }}
-              className="bg-teal-600 text-white px-4 py-2 rounded-md hover:bg-teal-700 transition-colors"
+              className="bg-teal-600 text-white px-4 py-2 rounded-md hover:bg-teal-700 transition-colors text-sm"
             >
               {showAddOperator ? 'Annulla' : 'Aggiungi Operatore'}
             </button>
@@ -56,7 +56,7 @@ export default function AdminDashboard({
                 setShowAddPatient(!showAddPatient);
                 setShowAddOperator(false);
               }}
-              className="bg-teal-600 text-white px-4 py-2 rounded-md hover:bg-teal-700 transition-colors"
+              className="bg-teal-600 text-white px-4 py-2 rounded-md hover:bg-teal-700 transition-colors text-sm"
             >
               {showAddPatient ? 'Annulla' : 'Aggiungi Paziente'}
             </button>

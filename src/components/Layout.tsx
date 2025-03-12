@@ -75,6 +75,23 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   onClick={() => setIsMenuOpen(false)}
                 >{item.title}</a>
               ))}
+              {currentUser ? (
+                <a
+                  href="/dashboard"
+                  className="block hover:text-teal-200 transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Dashboard
+                </a>
+              ) : (
+                <a
+                  href="/login"
+                  className="block hover:text-teal-200 transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Accedi
+                </a>
+              )}
             </div>
           </div>
         </nav>
