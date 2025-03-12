@@ -1,6 +1,6 @@
 import React from 'react';
 import { navigation } from '../data/navigation';
-import { Heart, Menu, X, Facebook, Instagram, Linkedin, Twitter } from 'lucide-react';
+import { Heart, Menu, X, Facebook, Instagram } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import CookieConsent from './CookieConsent';
@@ -110,17 +110,21 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 Supportiamo il benessere delle persone neurodiverse attraverso un approccio integrato e personalizzato.
               </p>
               <div className="flex space-x-4 mt-4">
-                <a href="#" className="text-teal-200 hover:text-white transition-colors">
+                <a 
+                  href="https://www.facebook.com/AssociazioneMaratonda/?locale=it_IT" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-teal-200 hover:text-white transition-colors"
+                >
                   <Facebook className="w-5 h-5" />
                 </a>
-                <a href="#" className="text-teal-200 hover:text-white transition-colors">
+                <a 
+                  href="https://www.instagram.com/associazionemaratonda/?hl=it" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-teal-200 hover:text-white transition-colors"
+                >
                   <Instagram className="w-5 h-5" />
-                </a>
-                <a href="#" className="text-teal-200 hover:text-white transition-colors">
-                  <Linkedin className="w-5 h-5" />
-                </a>
-                <a href="#" className="text-teal-200 hover:text-white transition-colors">
-                  <Twitter className="w-5 h-5" />
                 </a>
               </div>
             </div>
