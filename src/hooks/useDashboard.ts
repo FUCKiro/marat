@@ -172,8 +172,14 @@ export function useDashboard() {
   const exportVisitsToExcel = async () => {
     if (!currentUser?.role === 'admin') return;
     setExporting(true);
+    setError('');
+    setSuccess('');
 
     try {
+      // First, ensure we have fresh data
+      await fetchUsers();
+      await fetchPatients();
+
       const now = new Date();
       const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
       const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
@@ -194,8 +200,9 @@ export function useDashboard() {
       const patientSummary = {};
       visitsData.forEach(visit => {
         if (!patientSummary[visit.patientId]) {
+          const patient = users.find(p => p.id === visit.patientId && p.role === 'patient');
           patientSummary[visit.patientId] = {
-            name: patients.find(p => p.id === visit.patientId)?.name || 'Paziente non trovato',
+            name: patient?.name || 'Paziente non trovato',
             totalMinutes: 0,
             visits: [],
             operators: new Set()
@@ -226,7 +233,7 @@ export function useDashboard() {
 
       const detailData = visitsData.map(visit => ({
         'Data': visit.date.toLocaleDateString(),
-        'Paziente': patients.find(p => p.id === visit.patientId)?.name || 'Paziente sconosciuto',
+        'Paziente': users.find(p => p.id === visit.patientId && p.role === 'patient')?.name || 'Paziente sconosciuto',
         'Operatore': users.find(u => u.id === visit.operatorId)?.name || 'Operatore sconosciuto',
         'Durata (minuti)': visit.duration,
         'Durata (ore)': (visit.duration / 60).toFixed(2)
