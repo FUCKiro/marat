@@ -2,10 +2,35 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Layout from '../components/Layout';
+import { hasFirebaseConfig } from '../config/firebase';
 import SEO from '../components/SEO';
 import type { User } from '../types';
 
 export default function Register() {
+  if (!hasFirebaseConfig) {
+    return (
+      <Layout>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-lg text-center">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">
+              Firebase non configurato
+            </h2>
+            <p className="text-gray-600 mb-6">
+              Per utilizzare questa funzionalità, è necessario configurare Firebase.
+              Contatta l'amministratore del sistema per assistenza.
+            </p>
+            <a
+              href="/"
+              className="inline-block bg-teal-600 text-white px-6 py-2 rounded-lg hover:bg-teal-700 transition-colors"
+            >
+              Torna alla Home
+            </a>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');

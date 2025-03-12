@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Layout from '../components/Layout';
+import { hasFirebaseConfig } from '../config/firebase';
 import { utils, writeFile } from 'xlsx';
 import { db } from '../config/firebase';
 import { collection, query, where, getDocs, Timestamp, setDoc, doc, addDoc, deleteDoc, startOfMonth, endOfMonth } from 'firebase/firestore';
@@ -10,6 +11,30 @@ import { Visit, User } from '../types';
 import SEO from '../components/SEO';
 
 export default function Dashboard() {
+  if (!hasFirebaseConfig) {
+    return (
+      <Layout>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-lg text-center">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">
+              Firebase non configurato
+            </h2>
+            <p className="text-gray-600 mb-6">
+              Per utilizzare questa funzionalità, è necessario configurare Firebase.
+              Contatta l'amministratore del sistema per assistenza.
+            </p>
+            <a
+              href="/"
+              className="inline-block bg-teal-600 text-white px-6 py-2 rounded-lg hover:bg-teal-700 transition-colors"
+            >
+              Torna alla Home
+            </a>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
   const { currentUser } = useAuth();
   const navigate = useNavigate();
   const [visits, setVisits] = useState<Visit[]>([]);
@@ -63,45 +88,48 @@ export default function Dashboard() {
       const visitsData = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
-        date: (doc.data().date as Timestamp).toDate(),
+        date: (doc.data().date as Timestamp).toDate()
       }));
 
-      // Create operator summary
-      const operatorSummary = {};
+      // Create patient summary first
+      const patientSummary = {};
       visitsData.forEach(visit => {
-        if (!operatorSummary[visit.operatorId]) {
-          operatorSummary[visit.operatorId] = {
-            name: usersMap[visit.operatorId]?.name || 'Operatore sconosciuto',
+        if (!patientSummary[visit.patientId]) {
+          patientSummary[visit.patientId] = {
+            name: patientsMap[visit.patientId]?.name || 'Paziente non trovato',
             totalMinutes: 0,
-            visits: []
+            visits: [],
+            operators: new Set()
           };
         }
-        operatorSummary[visit.operatorId].totalMinutes += visit.duration;
-        operatorSummary[visit.operatorId].visits.push({
+        patientSummary[visit.patientId].totalMinutes += visit.duration;
+        patientSummary[visit.patientId].operators.add(visit.operatorId);
+        patientSummary[visit.patientId].visits.push({
           date: visit.date.toLocaleDateString(),
-          patient: patientsMap[visit.patientId]?.name || 'Paziente sconosciuto',
+          operator: usersMap[visit.operatorId]?.name || 'Operatore non trovato',
           duration: visit.duration
         });
       });
 
       // Prepare Excel data
       const worksheets = [];
-      
-      // Summary worksheet
-      const summaryData = Object.entries(operatorSummary).map(([_, data]: [string, any]) => ({
-        'Operatore': data.name,
+
+      // Patient summary worksheet
+      const patientSummaryData = Object.entries(patientSummary).map(([_, data]: [string, any]) => ({
+        'Paziente': data.name,
         'Ore Totali': (data.totalMinutes / 60).toFixed(2),
-        'Numero Visite': data.visits.length
+        'Numero Visite': data.visits.length,
+        'Operatori': Array.from(data.operators).map(id => usersMap[id]?.name || 'Operatore non trovato').join(', ')
       }));
       
-      const summaryWs = utils.json_to_sheet(summaryData);
-      worksheets.push(['Riepilogo', summaryWs]);
+      const patientSummaryWs = utils.json_to_sheet(patientSummaryData);
+      worksheets.push(['Riepilogo', patientSummaryWs]);
 
       // Detail worksheet
       const detailData = visitsData.map(visit => ({
         'Data': visit.date.toLocaleDateString(),
-        'Operatore': usersMap[visit.operatorId]?.name || 'Operatore sconosciuto',
         'Paziente': patientsMap[visit.patientId]?.name || 'Paziente sconosciuto',
+        'Operatore': usersMap[visit.operatorId]?.name || 'Operatore sconosciuto',
         'Durata (minuti)': visit.duration,
         'Durata (ore)': (visit.duration / 60).toFixed(2)
       }));
@@ -345,7 +373,9 @@ export default function Dashboard() {
         }), {} as Record<string, User>);
         setPatientsMap(patientsData);
 
-        setVisits(visitsData);
+        // Sort visits by date in descending order (most recent first)
+        const sortedVisits = visitsData.sort((a, b) => b.date.getTime() - a.date.getTime());
+        setVisits(sortedVisits);
         setLoading(false);
       } catch (error) {
         console.error('Error fetching visits:', error);
@@ -643,11 +673,16 @@ export default function Dashboard() {
               <div className="border-t border-gray-200">
                 <ul className="divide-y divide-gray-200">
                   {visits.map((visit) => (
-                    <li key={visit.id} className="px-4 py-4 sm:px-6">
+                    <li key={visit.id} className="px-4 py-4 sm:px-6 hover:bg-gray-50">
                       <div className="flex items-center justify-between">
                         <div>
                           <div className="text-sm font-medium text-teal-600">
-                            {visit.date.toLocaleDateString()}
+                            {visit.date.toLocaleDateString('it-IT', {
+                              weekday: 'long',
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            })}
                           </div>
                           <div className="text-sm text-gray-500">
                             Paziente: {patientsMap[visit.patientId]?.name || 'Paziente non trovato'}
