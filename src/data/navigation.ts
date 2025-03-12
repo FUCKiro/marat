@@ -5,7 +5,5 @@ export const navigation: NavItem[] = [
   { title: 'Chi Siamo', href: '/chi-siamo' },
   { title: 'Cosa Facciamo', href: '/cosa-facciamo' },
   { title: 'Il Nostro Team', href: '/team' },
-  { title: 'Contatti', href: '/contatti' },
-  { title: 'Accedi', href: '/login' },
-  { title: 'Registrati', href: '/register' },
+  { title: 'Contatti', href: '/contatti' }
 ];

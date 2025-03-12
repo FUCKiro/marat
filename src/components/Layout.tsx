@@ -2,10 +2,12 @@ import React from 'react';
 import { navigation } from '../data/navigation';
 import { Heart, Menu, X, Facebook, Instagram, Linkedin, Twitter } from 'lucide-react';
 import { useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import CookieConsent from './CookieConsent';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { currentUser } = useAuth();
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -30,6 +32,21 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   {item.title}
                 </a>
               ))}
+              {currentUser ? (
+                <a
+                  href="/dashboard"
+                  className="hover:text-teal-200 transition-colors"
+                >
+                  Dashboard
+                </a>
+              ) : (
+                <a
+                  href="/login"
+                  className="hover:text-teal-200 transition-colors"
+                >
+                  Accedi
+                </a>
+              )}
             </div>
             <button
               className="md:hidden"
