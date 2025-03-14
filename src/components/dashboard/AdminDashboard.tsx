@@ -2,6 +2,7 @@ import React from 'react';
 import UsersList from './UsersList';
 import AddOperatorForm from './AddOperatorForm';
 import AddPatientForm from './AddPatientForm';
+import AdminVisitForm from './AdminVisitForm';
 import VisitsList from './VisitsList';
 import { User } from '../../types';
 
@@ -13,10 +14,13 @@ interface Props {
   setShowAddOperator: (show: boolean) => void;
   showAddPatient: boolean;
   setShowAddPatient: (show: boolean) => void;
+  showAddVisit: boolean;
+  setShowAddVisit: (show: boolean) => void;
   error: string;
   success: string;
   onAddOperator: (e: React.FormEvent) => Promise<void>;
   onAddPatient: (e: React.FormEvent) => Promise<void>;
+  onAddVisit: (e: React.FormEvent) => Promise<void>;
   exporting: boolean;
   onExport: () => Promise<void>;
 }
@@ -29,13 +33,19 @@ export default function AdminDashboard({
   setShowAddOperator,
   showAddPatient,
   setShowAddPatient,
+  showAddVisit,
+  setShowAddVisit,
   error,
   success,
   onAddOperator,
   onAddPatient,
+  onAddVisit,
   exporting,
   onExport
 }: Props) {
+  const operators = users.filter(user => user.role === 'operator');
+  const patients = users.filter(user => user.role === 'patient');
+
   return (
     <>
       <div className="mb-8">
@@ -60,6 +70,16 @@ export default function AdminDashboard({
             >
               {showAddPatient ? 'Annulla' : 'Aggiungi Paziente'}
             </button>
+            <button
+              onClick={() => {
+                setShowAddVisit(!showAddVisit);
+                setShowAddOperator(false);
+                setShowAddPatient(false);
+              }}
+              className="bg-teal-600 text-white px-4 py-2 rounded-md hover:bg-teal-700 transition-colors text-sm"
+            >
+              {showAddVisit ? 'Annulla' : 'Aggiungi Visita'}
+            </button>
           </div>
         </div>
 
@@ -76,6 +96,16 @@ export default function AdminDashboard({
             error={error}
             success={success}
             onSubmit={onAddPatient}
+          />
+        )}
+
+        {showAddVisit && (
+          <AdminVisitForm
+            error={error}
+            success={success}
+            onSubmit={onAddVisit}
+            operators={operators}
+            patients={patients}
           />
         )}
 

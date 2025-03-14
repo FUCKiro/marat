@@ -108,6 +108,9 @@ export default function Dashboard() {
               success={success}
               onAddOperator={handleAddOperator}
               onAddPatient={handleAddPatient}
+              onAddVisit={handleAddVisit}
+              showAddVisit={showAddVisit}
+              setShowAddVisit={setShowAddVisit}
               exporting={exporting}
               onExport={exportVisitsToExcel}
             />

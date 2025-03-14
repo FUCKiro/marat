@@ -38,7 +38,7 @@ export function useVisits() {
         const usersSnapshot = await getDocs(usersRef);
         const usersData = usersSnapshot.docs.reduce((acc, doc) => ({
           ...acc,
-          [doc.id]: { id: doc.id, ...doc.data() } as User
+          [doc.id]: { id: doc.id, ...doc.data() } as User,
         }), {} as Record<string, User>);
         setUsersMap(usersData);
         
@@ -47,12 +47,21 @@ export function useVisits() {
         const patientsSnapshot = await getDocs(patientsQuery);
         const patientsData = patientsSnapshot.docs.reduce((acc, doc) => ({
           ...acc,
-          [doc.id]: { id: doc.id, ...doc.data() } as User
+          [doc.id]: { id: doc.id, ...doc.data() } as User,
         }), {} as Record<string, User>);
         setPatientsMap(patientsData);
 
-        // Sort visits by date in descending order (most recent first)
-        const sortedVisits = visitsData.sort((a, b) => b.date.getTime() - a.date.getTime());
+        // Sort visits by date in descending order and then by patient name
+        const sortedVisits = visitsData.sort((a, b) => {
+          // First sort by date
+          const dateCompare = b.date.getTime() - a.date.getTime();
+          if (dateCompare !== 0) return dateCompare;
+          
+          // Then by patient name if dates are equal
+          const patientA = patientsData[a.patientId]?.name || '';
+          const patientB = patientsData[b.patientId]?.name || '';
+          return patientA.localeCompare(patientB);
+        });
         setVisits(sortedVisits);
       } catch (error) {
         console.error('Error fetching visits:', error);

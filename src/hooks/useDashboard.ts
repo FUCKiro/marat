@@ -40,7 +40,7 @@ export function useDashboard() {
       id: doc.id,
       ...doc.data(),
       createdAt: (doc.data().createdAt as Timestamp).toDate()
-    })) as User[];
+    })).sort((a, b) => a.name.localeCompare(b.name)) as User[];
     setUsers(usersData);
   }
 
@@ -53,7 +53,7 @@ export function useDashboard() {
         id: doc.id,
         ...doc.data(),
         createdAt: (doc.data().createdAt as Timestamp).toDate()
-      })) as User[];
+      })).sort((a, b) => a.name.localeCompare(b.name)) as User[];
       setPatients(patientsData);
     } catch (error) {
       console.error('Error fetching patients:', error);
@@ -156,11 +156,12 @@ export function useDashboard() {
     e.preventDefault();
     setError('');
     setSuccess('');
+    const formData = new FormData(e.target as HTMLFormElement);
+    const operatorId = currentUser?.role === 'admin' ? formData.get('operatorId') : currentUser?.id;
 
     try {
-      const formData = new FormData(e.target as HTMLFormElement);
       const visitData = {
-        operatorId: currentUser!.id,
+        operatorId,
         patientId: formData.get('patientId'),
         date: Timestamp.fromDate(new Date(formData.get('date') as string)),
         duration: Number(formData.get('duration')),
