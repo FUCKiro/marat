@@ -40,7 +40,7 @@ export function useDashboard() {
       id: doc.id,
       ...doc.data(),
       createdAt: (doc.data().createdAt as Timestamp).toDate()
-    })).sort((a, b) => a.name.localeCompare(b.name)) as User[];
+    })).sort((a, b) => (a.name || '').localeCompare(b.name || '')) as User[];
     setUsers(usersData);
   }
 
@@ -53,7 +53,7 @@ export function useDashboard() {
         id: doc.id,
         ...doc.data(),
         createdAt: (doc.data().createdAt as Timestamp).toDate()
-      })).sort((a, b) => a.name.localeCompare(b.name)) as User[];
+      })).sort((a, b) => (a.name || '').localeCompare(b.name || '')) as User[];
       setPatients(patientsData);
     } catch (error) {
       console.error('Error fetching patients:', error);

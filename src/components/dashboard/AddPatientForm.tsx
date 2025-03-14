@@ -7,7 +7,14 @@ interface Props {
 }
 
 export default function AddPatientForm({ error, success, onSubmit }: Props) {
-  const [name, setName] = useState('');
+  const [formData, setFormData] = useState({
+    name: ''
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit(e);
+  };
 
   return (
     <div className="mt-4 bg-white p-6 rounded-lg shadow">
@@ -22,16 +29,17 @@ export default function AddPatientForm({ error, success, onSubmit }: Props) {
           {success}
         </div>
       )}
-      <form onSubmit={onSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700">
             Nome e Cognome
           </label>
           <input
             type="text"
+            name="name"
             required
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            value={formData.name}
+            onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"
           />
         </div>

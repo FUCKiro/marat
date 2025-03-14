@@ -58,8 +58,8 @@ export function useVisits() {
           if (dateCompare !== 0) return dateCompare;
           
           // Then by patient name if dates are equal
-          const patientA = patientsData[a.patientId]?.name || '';
-          const patientB = patientsData[b.patientId]?.name || '';
+          const patientA = (patientsData[a.patientId]?.name || '').toLowerCase();
+          const patientB = (patientsData[b.patientId]?.name || '').toLowerCase();
           return patientA.localeCompare(patientB);
         });
         setVisits(sortedVisits);
