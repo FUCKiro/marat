@@ -8,15 +8,41 @@ interface Props {
 
 export default function AddOperatorForm({ error, success, onSubmit }: Props) {
   const [formData, setFormData] = useState({
-    email: '',
+    email: '@maratonda.it',
     password: '',
     name: ''
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.name === 'email') {
+      const value = e.target.value;
+      // Ensure the email always ends with @maratonda.it
+      if (!value.endsWith('@maratonda.it')) {
+        setFormData(prev => ({
+          ...prev,
+          [e.target.name]: value + '@maratonda.it'
+        }));
+        return;
+      }
+    }
     setFormData(prev => ({
       ...prev,
       [e.target.name]: e.target.value
+    }));
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (value === '@maratonda.it') {
+      setFormData(prev => ({ ...prev, email: '@maratonda.it' }));
+      return;
+    }
+    
+    // Remove @maratonda.it if present in the input
+    const username = value.replace('@maratonda.it', '');
+    setFormData(prev => ({
+      ...prev,
+      email: username + '@maratonda.it'
     }));
   };
 
@@ -51,14 +77,17 @@ export default function AddOperatorForm({ error, success, onSubmit }: Props) {
           <label className="block text-sm font-medium text-gray-700">
             Email
           </label>
+          <div className="relative mt-1">
           <input
             type="email"
             name="email"
             required
             value={formData.email}
-            onChange={handleChange}
+            onChange={handleEmailChange}
+            placeholder="nome.cognome"
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"
           />
+          </div>
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700">
