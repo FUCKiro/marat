@@ -98,15 +98,21 @@ export function useDashboard() {
     e.preventDefault();
     setError('');
     setSuccess('');
+    const auth = getAuth();
+    const currentAdmin = auth.currentUser; // Store current admin user
 
     try {
-      const auth = getAuth();
       const formData = new FormData(e.target as HTMLFormElement);
       const { user } = await createUserWithEmailAndPassword(
         auth,
         formData.get('email') as string,
         formData.get('password') as string
       );
+      
+      // Sign back in as admin
+      if (currentAdmin) {
+        await auth.updateCurrentUser(currentAdmin);
+      }
 
       await setDoc(doc(db, 'users', user.uid), {
         email: formData.get('email'),
