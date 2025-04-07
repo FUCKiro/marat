@@ -167,6 +167,7 @@ export function useDashboard() {
       const visitData = {
         operatorId,
         patientId: formData.get('patientId'),
+        type: formData.get('type'),
         date: Timestamp.fromDate(new Date(formData.get('date') as string)),
         duration: Number(formData.get('duration')),
         createdAt: Timestamp.fromDate(new Date())
@@ -175,6 +176,7 @@ export function useDashboard() {
       await addDoc(collection(db, 'visits'), visitData);
       setSuccess('Visita aggiunta con successo');
       setShowAddVisit(false);
+      await fetchVisits();
     } catch (err: any) {
       setError(err.message);
     }
@@ -246,6 +248,7 @@ export function useDashboard() {
         'Data': visit.date.toLocaleDateString(),
         'Paziente': users.find(p => p.id === visit.patientId && p.role === 'patient')?.name || 'Paziente sconosciuto',
         'Operatore': users.find(u => u.id === visit.operatorId)?.name || 'Operatore sconosciuto',
+        'Tipologia': visit.type,
         'Durata (minuti)': visit.duration,
         'Durata (ore)': (visit.duration / 60).toFixed(2)
       }));

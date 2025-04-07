@@ -92,6 +92,9 @@ export default function VisitsList({ isAdmin, exporting, onExport, onEdit, onDel
                   <div className="text-sm text-gray-500">
                     Paziente: {patientsMap[visit.patientId]?.name || 'Paziente non trovato'}
                   </div>
+                  <div className="text-sm text-gray-500">
+                    Tipologia: {visit.type}
+                  </div>
                   {isAdmin && (
                     <div className="text-sm text-gray-500">
                       Operatore: {usersMap[visit.operatorId]?.name || 'Operatore non trovato'}

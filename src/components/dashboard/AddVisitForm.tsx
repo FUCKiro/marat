@@ -11,6 +11,7 @@ interface Props {
 export default function AddVisitForm({ error, success, onSubmit, patients }: Props) {
   const [formData, setFormData] = useState({
     patientId: '',
+    type: 'Psicoterapia',
     date: new Date().toISOString().split('T')[0],
     duration: 60
   });
@@ -56,6 +57,26 @@ export default function AddVisitForm({ error, success, onSubmit, patients }: Pro
                 {patient.name}
               </option>
             ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Tipologia
+          </label>
+          <select
+            name="type"
+            required
+            value={formData.type}
+            onChange={handleChange}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"
+          >
+            <option value="Psicoterapia">Psicoterapia</option>
+            <option value="Psicoeducazione">Psicoeducazione</option>
+            <option value="ABA">ABA</option>
+            <option value="Logopedia">Logopedia</option>
+            <option value="Neuropsicomotricità">Neuropsicomotricità</option>
+            <option value="Gruppo">Gruppo</option>
+            <option value="GLO">GLO</option>
           </select>
         </div>
         <div>

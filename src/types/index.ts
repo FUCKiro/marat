@@ -40,6 +40,7 @@ export interface Visit {
   id: string;
   operatorId: string;
   patientId: string;
+  type: 'Psicoterapia' | 'Psicoeducazione' | 'ABA' | 'Logopedia' | 'Neuropsicomotricità' | 'Gruppo' | 'GLO';
   date: Date;
   duration: number; // in minutes
   notes?: string;
