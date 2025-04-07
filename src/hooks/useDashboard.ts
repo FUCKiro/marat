@@ -217,15 +217,22 @@ export function useDashboard() {
           patientSummary[visit.patientId] = {
             name: patient?.name || 'Paziente non trovato',
             totalMinutes: 0,
+            typeMinutes: {},
             visits: [],
             operators: new Set()
           };
         }
         patientSummary[visit.patientId].totalMinutes += visit.duration;
+        // Track minutes per type
+        if (!patientSummary[visit.patientId].typeMinutes[visit.type]) {
+          patientSummary[visit.patientId].typeMinutes[visit.type] = 0;
+        }
+        patientSummary[visit.patientId].typeMinutes[visit.type] += visit.duration;
         patientSummary[visit.patientId].operators.add(visit.operatorId);
         patientSummary[visit.patientId].visits.push({
           date: visit.date.toLocaleDateString(),
           operator: users.find(u => u.id === visit.operatorId)?.name || 'Operatore non trovato',
+          type: visit.type,
           duration: visit.duration
         });
       });
@@ -235,7 +242,15 @@ export function useDashboard() {
       const patientSummaryData = Object.entries(patientSummary).map(([_, data]: [string, any]) => ({
         'Paziente': data.name,
         'Ore Totali': (data.totalMinutes / 60).toFixed(2),
+        'Ore Psicoterapia': ((data.typeMinutes['Psicoterapia'] || 0) / 60).toFixed(2),
+        'Ore Psicoeducazione': ((data.typeMinutes['Psicoeducazione'] || 0) / 60).toFixed(2),
+        'Ore ABA': ((data.typeMinutes['ABA'] || 0) / 60).toFixed(2),
+        'Ore Logopedia': ((data.typeMinutes['Logopedia'] || 0) / 60).toFixed(2),
+        'Ore Neuropsicomotricità': ((data.typeMinutes['Neuropsicomotricità'] || 0) / 60).toFixed(2),
+        'Ore Gruppo': ((data.typeMinutes['Gruppo'] || 0) / 60).toFixed(2),
+        'Ore GLO': ((data.typeMinutes['GLO'] || 0) / 60).toFixed(2),
         'Numero Visite': data.visits.length,
+        'Tipologie': data.visits.map((v: any) => v.type).filter((t: string, i: number, arr: string[]) => arr.indexOf(t) === i).join(', '),
         'Operatori': Array.from(data.operators)
           .map(id => users.find(u => u.id === id)?.name || 'Operatore non trovato')
           .join(', ')
@@ -247,8 +262,8 @@ export function useDashboard() {
       const detailData = visitsData.map(visit => ({
         'Data': visit.date.toLocaleDateString(),
         'Paziente': users.find(p => p.id === visit.patientId && p.role === 'patient')?.name || 'Paziente sconosciuto',
+        'Tipologia': visit.type || 'Non specificata',
         'Operatore': users.find(u => u.id === visit.operatorId)?.name || 'Operatore sconosciuto',
-        'Tipologia': visit.type,
         'Durata (minuti)': visit.duration,
         'Durata (ore)': (visit.duration / 60).toFixed(2)
       }));
