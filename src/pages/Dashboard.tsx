@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import Layout from '../components/Layout';
 import { hasFirebaseConfig } from '../config/firebase';
 import SEO from '../components/SEO';
 import AdminDashboard from '../components/dashboard/AdminDashboard';
@@ -21,7 +20,7 @@ export default function Dashboard() {
 
   if (!hasFirebaseConfig) {
     return (
-      <Layout>
+      <>
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
           <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-lg text-center">
             <h2 className="text-2xl font-bold text-gray-800 mb-4">
@@ -39,7 +38,7 @@ export default function Dashboard() {
             </a>
           </div>
         </div>
-      </Layout>
+      </>
     );
   }
 
@@ -78,7 +77,7 @@ export default function Dashboard() {
   };
 
   return (
-    <Layout>
+    <>
       <SEO title="Dashboard" />
       <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
@@ -132,6 +131,6 @@ export default function Dashboard() {
           )}
         </div>
       </div>
-    </Layout>
+    </>
   );
 }

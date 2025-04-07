@@ -1,5 +1,4 @@
 import React from 'react';
-import Layout from '../components/Layout';
 import { team } from '../data/team';
 import { collaborators } from '../data/collaborators';
 import { Users } from 'lucide-react';
@@ -10,7 +9,7 @@ import SEO from '../components/SEO';
 
 export default function Team() {
   return (
-    <Layout>
+    <>
       <SEO
         title="Il Nostro Team"
         description="Conosci il team di professionisti di Maratonda: psicologi, terapisti, logopedisti ed educatori specializzati nel supporto alle persone neurodiverse."
@@ -95,6 +94,6 @@ export default function Team() {
           </a>
         </ScrollAnimation>
       </div>
-    </Layout>
+    </>
   );
 }

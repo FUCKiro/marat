@@ -1,5 +1,4 @@
 import React from 'react';
-import Layout from '../components/Layout';
 import { MapPin, Phone, Mail, Clock } from 'lucide-react';
 import PageBackground3D from '../components/PageBackground3D';
 import { useState } from 'react';
@@ -42,7 +41,7 @@ export default function Contatti() {
   };
 
   return (
-    <Layout>
+    <>
       <SEO
         title="Contatti"
         description="Contatta Maratonda per informazioni sui nostri servizi. Siamo a Roma e offriamo supporto specialistico per persone neurodiverse e le loro famiglie."
@@ -176,6 +175,6 @@ export default function Contatti() {
           </div>
         </div>
       </div>
-    </Layout>
+    </>
   );
 }

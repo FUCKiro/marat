@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { navigation } from '../data/navigation';
 import { Heart, Menu, X, Facebook, Instagram } from 'lucide-react';
 import { useState } from 'react';
@@ -14,38 +15,38 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <header className="bg-teal-600 text-white">
         <nav className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <a href="/" className="flex items-center space-x-3">
+            <Link to="/" className="flex items-center space-x-3">
               <img 
                 src="https://res.cloudinary.com/dlc5g3cjb/image/upload/v1733848053/Maratonda_logo_tz9x92.png"
                 alt="Maratonda Logo"
                 className="w-12 h-12 rounded-full"
               />
               <span className="text-xl font-bold">Maratonda</span>
-            </a>
+            </Link>
             <div className="hidden md:flex space-x-6">
               {navigation.map((item) => (
-                <a
+                <Link
                   key={item.href}
-                  href={item.href}
+                  to={item.href}
                   className="hover:text-teal-200 transition-colors"
                 >
                   {item.title}
-                </a>
+                </Link>
               ))}
               {currentUser ? (
-                <a
-                  href="/dashboard"
+                <Link
+                  to="/dashboard"
                   className="hover:text-teal-200 transition-colors"
                 >
                   Dashboard
-                </a>
+                </Link>
               ) : (
-                <a
-                  href="/login"
+                <Link
+                  to="/login"
                   className="hover:text-teal-200 transition-colors"
                 >
                   Accedi
-                </a>
+                </Link>
               )}
             </div>
             <button
@@ -68,29 +69,29 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           >
             <div className="py-4 space-y-4">
               {navigation.map((item) => (
-                <a
+                <Link
                   key={item.href}
-                  href={item.href}
+                  to={item.href}
                   className="block hover:text-teal-200 transition-colors"
                   onClick={() => setIsMenuOpen(false)}
-                >{item.title}</a>
+                >{item.title}</Link>
               ))}
               {currentUser ? (
-                <a
-                  href="/dashboard"
+                <Link
+                  to="/dashboard"
                   className="block hover:text-teal-200 transition-colors"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Dashboard
-                </a>
+                </Link>
               ) : (
-                <a
-                  href="/login"
+                <Link
+                  to="/login"
                   className="block hover:text-teal-200 transition-colors"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Accedi
-                </a>
+                </Link>
               )}
             </div>
           </div>

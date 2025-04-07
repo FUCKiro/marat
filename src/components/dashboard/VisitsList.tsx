@@ -1,5 +1,6 @@
 import React from 'react';
 import { useVisits } from '../../hooks/useVisits';
+import { Visit } from '../../types';
 
 interface Props {
   isAdmin: boolean;
@@ -10,11 +11,45 @@ interface Props {
 export default function VisitsList({ isAdmin, exporting, onExport }: Props) {
   const { visits, usersMap, patientsMap } = useVisits();
 
+  const today = new Date();
+  const currentMonth = today.getMonth();
+  const currentYear = today.getFullYear();
+
+  // Separate current month visits from older ones
+  const { currentMonthVisits, olderVisits } = visits.reduce(
+    (acc, visit) => {
+      const visitDate = visit.date;
+      if (
+        visitDate.getMonth() === currentMonth &&
+        visitDate.getFullYear() === currentYear
+      ) {
+        acc.currentMonthVisits.push(visit);
+      } else {
+        acc.olderVisits.push(visit);
+      }
+      return acc;
+    },
+    { currentMonthVisits: [] as Visit[], olderVisits: [] as Visit[] }
+  );
+
+  // Group older visits by month
+  const groupedOlderVisits = olderVisits.reduce((acc, visit) => {
+    const monthYear = visit.date.toLocaleDateString('it-IT', {
+      year: 'numeric',
+      month: 'long'
+    });
+    if (!acc[monthYear]) {
+      acc[monthYear] = [];
+    }
+    acc[monthYear].push(visit);
+    return acc;
+  }, {} as Record<string, Visit[]>);
+
   return (
     <div className="bg-white shadow overflow-hidden sm:rounded-lg">
       <div className="px-4 py-5 sm:px-6">
         <h2 className="text-lg leading-6 font-medium text-gray-900">
-          Visite {isAdmin && 'del mese'}
+          Visite {isAdmin ? 'del mese corrente' : ''}
         </h2>
         {isAdmin && onExport && (
           <button
@@ -28,7 +63,7 @@ export default function VisitsList({ isAdmin, exporting, onExport }: Props) {
       </div>
       <div className="border-t border-gray-200">
         <ul className="divide-y divide-gray-200">
-          {visits.map((visit) => (
+          {currentMonthVisits.map((visit) => (
             <li key={visit.id} className="px-4 py-4 sm:px-6 hover:bg-gray-50">
               <div className="flex items-center justify-between">
                 <div>
@@ -61,6 +96,52 @@ export default function VisitsList({ isAdmin, exporting, onExport }: Props) {
             </li>
           ))}
         </ul>
+        
+        {isAdmin && Object.entries(groupedOlderVisits).length > 0 && (
+          <div className="mt-8">
+            {Object.entries(groupedOlderVisits)
+              .sort(([a], [b]) => new Date(b).getTime() - new Date(a).getTime())
+              .map(([monthYear, monthVisits]) => (
+                <div key={monthYear} className="mb-8">
+                  <h3 className="px-4 py-2 bg-gray-50 text-gray-700 font-medium">
+                    {monthYear}
+                  </h3>
+                  <ul className="divide-y divide-gray-200">
+                    {monthVisits.map((visit) => (
+                      <li key={visit.id} className="px-4 py-4 sm:px-6 hover:bg-gray-50">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="text-sm font-medium text-teal-600">
+                              {visit.date.toLocaleDateString('it-IT', {
+                                weekday: 'long',
+                                day: 'numeric'
+                              })}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              Paziente: {patientsMap[visit.patientId]?.name || 'Paziente non trovato'}
+                            </div>
+                            {isAdmin && (
+                              <div className="text-sm text-gray-500">
+                                Operatore: {usersMap[visit.operatorId]?.name || 'Operatore non trovato'}
+                              </div>
+                            )}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            Durata: {visit.duration} minuti
+                          </div>
+                        </div>
+                        {visit.notes && (
+                          <div className="mt-2 text-sm text-gray-500">
+                            {visit.notes}
+                          </div>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,12 +1,11 @@
 import React from 'react';
-import Layout from '../components/Layout';
 import PageBackground3D from '../components/PageBackground3D';
 import ScrollAnimation from '../components/ScrollAnimation';
 import SEO from '../components/SEO';
 
 export default function Privacy() {
   return (
-    <Layout>
+    <>
       <SEO
         title="Privacy Policy"
         description="Informativa sulla privacy di Maratonda: scopri come trattiamo e proteggiamo i tuoi dati personali nel rispetto della normativa vigente."
@@ -91,6 +90,6 @@ export default function Privacy() {
           </ScrollAnimation>
         </div>
       </div>
-    </Layout>
+    </>
   );
 }

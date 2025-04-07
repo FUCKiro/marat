@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import Layout from '../components/Layout';
 import { hasFirebaseConfig } from '../config/firebase';
 import SEO from '../components/SEO';
 
 export default function Login() {
   if (!hasFirebaseConfig) {
     return (
-      <Layout>
+      <>
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
           <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-lg text-center">
             <h2 className="text-2xl font-bold text-gray-800 mb-4">
@@ -26,7 +25,7 @@ export default function Login() {
             </a>
           </div>
         </div>
-      </Layout>
+      </>
     );
   }
 
@@ -53,7 +52,7 @@ export default function Login() {
   }
 
   return (
-    <Layout>
+    <>
       <SEO title="Login" />
       <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
@@ -118,6 +117,6 @@ export default function Login() {
           </div>
         </div>
       </div>
-    </Layout>
+    </>
   );
 }

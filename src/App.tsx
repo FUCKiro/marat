@@ -1,5 +1,5 @@
 import React from 'react';
-import Layout from './components/Layout';
+import { Link } from 'react-router-dom';
 import { ArrowRight, Heart, Brain, Users, Sparkles, Activity, MessageSquare, GraduationCap, BookOpen } from 'lucide-react';
 import { services } from './data/services';
 import Hero3D from './components/Hero3D';
@@ -7,7 +7,7 @@ import SEO from './components/SEO';
 
 function App() {
   return (
-    <Layout>
+    <>
       <SEO />
       {/* Hero Section */}
       <section className="relative min-h-[90vh] text-white flex items-center pt-24">
@@ -21,19 +21,19 @@ function App() {
               Per ogni mente in crescita, un percorso su misura
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
-              <a
-                href="/contatti"
+              <Link
+                to="/contatti"
                 className="group bg-white/90 backdrop-blur-sm text-teal-600 px-8 py-3 rounded-full font-semibold hover:bg-white transition-all inline-flex items-center justify-center"
               >
                 Contattaci
                 <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </a>
-              <a
-                href="/chi-siamo"
+              </Link>
+              <Link
+                to="/chi-siamo"
                 className="bg-transparent border-2 border-white/70 text-white px-8 py-3 rounded-full font-semibold hover:bg-white/10 transition-all hover:border-white"
               >
                 Scopri di più
-              </a>
+              </Link>
             </div>
           </div>
         </div>
@@ -98,7 +98,7 @@ function App() {
           </div>
         </div>
       </section>
-    </Layout>
+    </>
   );
 }
 

@@ -1,5 +1,4 @@
 import React from 'react';
-import Layout from '../components/Layout';
 import type { Service } from '../types';
 import { services } from '../data/services';
 import { Heart, Brain, Users, Sparkles, Activity, MessageSquare, GraduationCap, BookOpen } from 'lucide-react';
@@ -14,7 +13,7 @@ export default function CosaFacciamo() {
   const [selectedService, setSelectedService] = useState<Service | null>(null);
 
   return (
-    <Layout>
+    <>
       <SEO
         title="Cosa Facciamo"
         description="Scopri i servizi specialistici di Maratonda: ABA, psicoterapia, neuropsicomotricità, logopedia e molto altro. Interventi personalizzati per il benessere delle persone neurodiverse."
@@ -133,6 +132,6 @@ export default function CosaFacciamo() {
           </motion.div>
         )}
       </AnimatePresence>
-    </Layout>
+    </>
   );
 }
