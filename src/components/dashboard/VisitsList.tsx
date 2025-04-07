@@ -105,7 +105,7 @@ export default function VisitsList({ isAdmin, exporting, onExport, onEdit, onDel
                   Durata: {visit.duration} minuti
                 </div>
                 {isAdmin && (
-                  <div className="flex items-center space-x-4">
+                  <div className="flex flex-col sm:flex-row items-end sm:items-center sm:space-x-4 space-y-2 sm:space-y-0">
                     <button
                       onClick={() => handleEdit(visit)}
                       className="text-teal-600 hover:text-teal-800 transition-colors font-medium"
@@ -164,7 +164,7 @@ export default function VisitsList({ isAdmin, exporting, onExport, onEdit, onDel
                             Durata: {visit.duration} minuti
                           </div>
                           {isAdmin && (
-                            <div className="flex items-center space-x-4">
+                            <div className="flex flex-col sm:flex-row items-end sm:items-center sm:space-x-4 space-y-2 sm:space-y-0">
                               <button
                                 onClick={() => handleEdit(visit)}
                                className="text-teal-600 hover:text-teal-800 transition-colors font-medium"
