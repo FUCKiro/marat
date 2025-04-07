@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../config/firebase';
-import { collection, query, where, getDocs, Timestamp, setDoc, doc, addDoc, deleteDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, Timestamp, setDoc, doc, addDoc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { utils, writeFile } from 'xlsx';
-import { User } from '../types';
+import { User, Visit } from '../types';
+import { useVisits } from './useVisits';
 
 export function useDashboard() {
   const { currentUser } = useAuth();
+  const { fetchVisits } = useVisits();
   const [loading, setLoading] = useState(true);
 
   const [error, setError] = useState('');
@@ -19,6 +21,8 @@ export function useDashboard() {
   const [showAddVisit, setShowAddVisit] = useState(false);
   const [deletingUser, setDeletingUser] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
+  const [editingVisit, setEditingVisit] = useState<Visit | null>(null);
+  const [deletingVisit, setDeletingVisit] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadData() {
@@ -268,6 +272,52 @@ export function useDashboard() {
     }
   };
 
+  const handleEditVisit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    if (!editingVisit) return;
+
+    try {
+      const formData = new FormData(e.target as HTMLFormElement);
+      const visitData = {
+        operatorId: formData.get('operatorId'),
+        patientId: formData.get('patientId'),
+        date: Timestamp.fromDate(new Date(formData.get('date') as string)),
+        duration: Number(formData.get('duration')),
+        updatedAt: Timestamp.fromDate(new Date())
+      };
+
+      await updateDoc(doc(db, 'visits', editingVisit.id), visitData);
+      setSuccess('Visita modificata con successo');
+      setEditingVisit(null);
+      await fetchVisits();
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  const handleDeleteVisit = async (visitId: string) => {
+    if (!window.confirm('Sei sicuro di voler eliminare questa visita?')) {
+      return;
+    }
+
+    setError('');
+    setSuccess('');
+    setDeletingVisit(visitId);
+
+    try {
+      await deleteDoc(doc(db, 'visits', visitId));
+      setSuccess('Visita eliminata con successo');
+      await fetchVisits();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setDeletingVisit(null);
+    }
+  };
+
   return {
     loading,
     error,
@@ -286,6 +336,11 @@ export function useDashboard() {
     handleAddOperator,
     handleAddPatient,
     handleAddVisit,
-    exportVisitsToExcel
+    exportVisitsToExcel,
+    editingVisit,
+    setEditingVisit,
+    handleEditVisit,
+    deletingVisit,
+    handleDeleteVisit
   };
 }

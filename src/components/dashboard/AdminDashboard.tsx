@@ -4,7 +4,7 @@ import AddOperatorForm from './AddOperatorForm';
 import AddPatientForm from './AddPatientForm';
 import AdminVisitForm from './AdminVisitForm';
 import VisitsList from './VisitsList';
-import { User } from '../../types';
+import { User, Visit } from '../../types';
 
 interface Props {
   users: User[];
@@ -23,6 +23,11 @@ interface Props {
   onAddVisit: (e: React.FormEvent) => Promise<void>;
   exporting: boolean;
   onExport: () => Promise<void>;
+  editingVisit: Visit | null;
+  setEditingVisit: (visit: Visit | null) => void;
+  onEditVisit: (e: React.FormEvent) => Promise<void>;
+  deletingVisit: string | null;
+  onDeleteVisit: (visitId: string) => Promise<void>;
 }
 
 export default function AdminDashboard({
@@ -41,7 +46,12 @@ export default function AdminDashboard({
   onAddPatient,
   onAddVisit,
   exporting,
-  onExport
+  onExport,
+  editingVisit,
+  setEditingVisit,
+  onEditVisit,
+  deletingVisit,
+  onDeleteVisit
 }: Props) {
   const operators = users.filter(user => user.role === 'operator');
   const patients = users.filter(user => user.role === 'patient');
@@ -106,7 +116,25 @@ export default function AdminDashboard({
             onSubmit={onAddVisit}
             operators={operators}
             patients={patients}
+            isEditing={false}
           />
+        )}
+
+        {editingVisit && !showAddVisit && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div className="w-full max-w-2xl">
+              <AdminVisitForm
+                error={error}
+                success={success}
+                onSubmit={onEditVisit}
+                operators={operators}
+                patients={patients}
+                initialData={editingVisit}
+                isEditing={true}
+                onCancel={() => setEditingVisit(null)}
+              />
+            </div>
+          </div>
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -135,6 +163,9 @@ export default function AdminDashboard({
         isAdmin={true}
         exporting={exporting}
         onExport={onExport}
+        onEdit={setEditingVisit}
+        onDelete={onDeleteVisit}
+        deletingVisit={deletingVisit}
       />
     </>
   );

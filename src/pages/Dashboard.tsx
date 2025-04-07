@@ -60,7 +60,12 @@ export default function Dashboard() {
     handleAddOperator,
     handleAddPatient,
     handleAddVisit,
-    exportVisitsToExcel
+    exportVisitsToExcel,
+    editingVisit,
+    setEditingVisit,
+    handleEditVisit,
+    deletingVisit,
+    handleDeleteVisit
   } = useDashboard();
 
   if (!currentUser || loading) {
@@ -112,6 +117,11 @@ export default function Dashboard() {
               setShowAddVisit={setShowAddVisit}
               exporting={exporting}
               onExport={exportVisitsToExcel}
+              editingVisit={editingVisit}
+              setEditingVisit={setEditingVisit}
+              onEditVisit={handleEditVisit}
+              deletingVisit={deletingVisit}
+              onDeleteVisit={handleDeleteVisit}
             />
           )}
           

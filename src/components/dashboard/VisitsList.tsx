@@ -6,10 +6,24 @@ interface Props {
   isAdmin: boolean;
   exporting?: boolean;
   onExport?: () => Promise<void>;
+  onEdit?: (visit: Visit) => void;
+  onDelete?: (visitId: string) => void;
+  deletingVisit?: string | null;
 }
 
-export default function VisitsList({ isAdmin, exporting, onExport }: Props) {
+export default function VisitsList({ isAdmin, exporting, onExport, onEdit, onDelete, deletingVisit }: Props) {
   const { visits, usersMap, patientsMap } = useVisits();
+  const handleEdit = (visit: Visit) => {
+    if (onEdit) {
+      onEdit(visit);
+    }
+  };
+
+  const handleDelete = (visitId: string) => {
+    if (onDelete) {
+      onDelete(visitId);
+    }
+  };
 
   const today = new Date();
   const currentMonth = today.getMonth();
@@ -87,6 +101,23 @@ export default function VisitsList({ isAdmin, exporting, onExport }: Props) {
                 <div className="text-sm text-gray-500">
                   Durata: {visit.duration} minuti
                 </div>
+                {isAdmin && (
+                  <div className="flex items-center space-x-4">
+                    <button
+                      onClick={() => handleEdit(visit)}
+                      className="text-teal-600 hover:text-teal-800 transition-colors font-medium"
+                    >
+                      Modifica
+                    </button>
+                    <button
+                      onClick={() => handleDelete(visit.id)}
+                      disabled={deletingVisit === visit.id}
+                      className="text-red-600 hover:text-red-800 transition-colors disabled:opacity-50 font-medium"
+                    >
+                      {deletingVisit === visit.id ? 'Eliminazione...' : 'Elimina'}
+                    </button>
+                  </div>
+                )}
               </div>
               {visit.notes && (
                 <div className="mt-2 text-sm text-gray-500">
@@ -129,6 +160,23 @@ export default function VisitsList({ isAdmin, exporting, onExport }: Props) {
                           <div className="text-sm text-gray-500">
                             Durata: {visit.duration} minuti
                           </div>
+                          {isAdmin && (
+                            <div className="flex items-center space-x-4">
+                              <button
+                                onClick={() => handleEdit(visit)}
+                               className="text-teal-600 hover:text-teal-800 transition-colors font-medium"
+                              >
+                                Modifica
+                              </button>
+                              <button
+                                onClick={() => handleDelete(visit.id)}
+                                disabled={deletingVisit === visit.id}
+                               className="text-red-600 hover:text-red-800 transition-colors disabled:opacity-50 font-medium"
+                              >
+                                {deletingVisit === visit.id ? 'Eliminazione...' : 'Elimina'}
+                              </button>
+                            </div>
+                          )}
                         </div>
                         {visit.notes && (
                           <div className="mt-2 text-sm text-gray-500">

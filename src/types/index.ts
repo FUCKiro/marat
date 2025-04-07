@@ -44,4 +44,5 @@ export interface Visit {
   duration: number; // in minutes
   notes?: string;
   createdAt: Date;
+  updatedAt?: Date;
 }

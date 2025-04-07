@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User } from '../../types';
+import { User, Visit } from '../../types';
 
 interface Props {
   error: string;
@@ -7,14 +7,26 @@ interface Props {
   onSubmit: (e: React.FormEvent) => Promise<void>;
   operators: User[];
   patients: User[];
+  initialData?: Visit | null;
+  isEditing?: boolean;
+  onCancel?: () => void;
 }
 
-export default function AdminVisitForm({ error, success, onSubmit, operators, patients }: Props) {
+export default function AdminVisitForm({ 
+  error, 
+  success, 
+  onSubmit, 
+  operators, 
+  patients, 
+  initialData,
+  isEditing,
+  onCancel 
+}: Props) {
   const [formData, setFormData] = useState({
-    operatorId: '',
-    patientId: '',
-    date: new Date().toISOString().split('T')[0],
-    duration: 60
+    operatorId: initialData ? initialData.operatorId : '',
+    patientId: initialData ? initialData.patientId : '',
+    date: initialData ? initialData.date.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+    duration: initialData ? initialData.duration : 60
   });
 
   const handleChange = (
@@ -28,8 +40,10 @@ export default function AdminVisitForm({ error, success, onSubmit, operators, pa
   };
 
   return (
-    <div className="mt-4 bg-white p-6 rounded-lg shadow">
-      <h2 className="text-xl font-semibold mb-4">Aggiungi Nuova Visita</h2>
+    <div className="bg-white p-6 rounded-lg shadow-xl">
+      <h2 className="text-xl font-semibold mb-4">
+        {isEditing ? `Modifica Visita del ${initialData?.date.toLocaleDateString('it-IT')}` : 'Aggiungi Nuova Visita'}
+      </h2>
       {error && (
         <div className="mb-4 text-red-600 bg-red-50 p-3 rounded">
           {error}
@@ -107,12 +121,23 @@ export default function AdminVisitForm({ error, success, onSubmit, operators, pa
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"
           />
         </div>
-        <button
-          type="submit"
-          className="w-full bg-teal-600 text-white px-4 py-2 rounded-md hover:bg-teal-700 transition-colors"
-        >
-          Aggiungi Visita
-        </button>
+        <div className="flex space-x-4">
+          <button
+            type="submit"
+            className="flex-1 bg-teal-600 text-white px-4 py-2 rounded-md hover:bg-teal-700 transition-colors"
+          >
+            {isEditing ? 'Salva Modifiche' : 'Aggiungi Visita'}
+          </button>
+          {isEditing && onCancel && (
+            <button
+              type="button"
+              onClick={onCancel}
+              className="flex-1 bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300 transition-colors"
+            >
+              Annulla
+            </button>
+          )}
+        </div>
       </form>
     </div>
   );
