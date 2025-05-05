@@ -39,11 +39,9 @@ export default function UsersList({ users, type, title, onDeleteUser, deletingUs
                   <div className="text-sm font-medium text-teal-600">
                     {user.name}
                   </div>
-                  {user.email && (
-                    <div className="text-sm text-gray-500">
-                      {user.email}
-                    </div>
-                  )}
+                  <div className="text-sm text-gray-500">
+                    {user.email || 'Email non fornita'}
+                  </div>
                 </div>
                 <div className="flex items-center">
                   <button

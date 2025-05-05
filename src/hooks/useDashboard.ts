@@ -144,6 +144,7 @@ export function useDashboard() {
       
       await setDoc(patientRef, {
         name: formData.get('name'),
+        email: formData.get('email') || null,
         role: 'patient',
         createdAt: new Date()
       });
@@ -241,6 +242,7 @@ export function useDashboard() {
 
       const patientSummaryData = Object.entries(patientSummary).map(([_, data]: [string, any]) => ({
         'Paziente': data.name,
+        'Email': users.find(p => p.id === _.toString())?.email || 'Email non fornita',
         'Ore Totali': (data.totalMinutes / 60).toFixed(2),
         'Ore Psicoterapia': ((data.typeMinutes['Psicoterapia'] || 0) / 60).toFixed(2),
         'Ore Psicoeducazione': ((data.typeMinutes['Psicoeducazione'] || 0) / 60).toFixed(2),
@@ -262,6 +264,7 @@ export function useDashboard() {
       const detailData = visitsData.map(visit => ({
         'Data': visit.date.toLocaleDateString(),
         'Paziente': users.find(p => p.id === visit.patientId && p.role === 'patient')?.name || 'Paziente sconosciuto',
+        'Email Paziente': users.find(p => p.id === visit.patientId && p.role === 'patient')?.email || 'Email non fornita',
         'Tipologia': visit.type || 'Non specificata',
         'Operatore': users.find(u => u.id === visit.operatorId)?.name || 'Operatore sconosciuto',
         'Durata (minuti)': visit.duration,
