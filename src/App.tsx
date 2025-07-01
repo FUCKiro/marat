@@ -10,27 +10,29 @@ function App() {
     <>
       <SEO />
       {/* Hero Section */}
-      <section className="relative min-h-[90vh] text-white flex items-center pt-24">
+      <section className="relative min-h-[90vh] text-white flex items-end pb-12 md:pb-32 pt-8 md:pt-24">
         <Hero3D />
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-3xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-12">
+            <h1 className="text-5xl md:text-5xl font-bold mb-12">
               Maratonda
             </h1>
-            <p className="text-2xl mb-16 font-light">
+            <p className="text-xl md:text-2xl mb-12 font-light">
+            </p>
+            <p className="text-2xl md:text-3xl mb-8 md:mb-12 font-light">
               Per ogni mente in crescita, un percorso su misura
             </p>
-            <div className="flex flex-col sm:flex-row gap-6 justify-center">
+            <div className="flex flex-col sm:flex-row gap-2 md:gap-4 justify-center">
               <Link
                 to="/contatti"
-                className="group bg-white/90 backdrop-blur-sm text-teal-600 px-8 py-3 rounded-full font-semibold hover:bg-white transition-all inline-flex items-center justify-center"
+                className="group bg-white/90 backdrop-blur-sm text-teal-600 px-6 py-2.5 md:px-8 md:py-3 rounded-full font-semibold hover:bg-white transition-all inline-flex items-center justify-center text-sm md:text-base"
               >
                 Contattaci
                 <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Link>
               <Link
                 to="/chi-siamo"
-                className="bg-transparent border-2 border-white/70 text-white px-8 py-3 rounded-full font-semibold hover:bg-white/10 transition-all hover:border-white"
+                className="bg-transparent border-2 border-white/70 text-white px-6 py-2.5 md:px-8 md:py-3 rounded-full font-semibold hover:bg-white/10 transition-all hover:border-white text-sm md:text-base"
               >
                 Scopri di più
               </Link>
