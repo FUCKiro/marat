@@ -202,6 +202,18 @@ export const sendInvoiceEmail = async (
   patientEmail: string
 ): Promise<boolean> => {
   try {
+    // Log environment variables for debugging (without exposing sensitive data)
+    console.log('Environment check:', {
+      hasServiceId: !!EMAILJS_SERVICE_ID && EMAILJS_SERVICE_ID !== 'your_service_id',
+      hasTemplateId: !!EMAILJS_TEMPLATE_ID && EMAILJS_TEMPLATE_ID !== 'your_template_id',
+      hasPublicKey: !!EMAILJS_PUBLIC_KEY && EMAILJS_PUBLIC_KEY !== 'your_public_key',
+      serviceIdLength: EMAILJS_SERVICE_ID?.length || 0,
+      templateIdLength: EMAILJS_TEMPLATE_ID?.length || 0,
+      publicKeyLength: EMAILJS_PUBLIC_KEY?.length || 0,
+      isProduction: import.meta.env.PROD,
+      mode: import.meta.env.MODE
+    });
+
     // Validate configuration first
     if (!validateEmailConfiguration()) {
       console.error('Configurazione EmailJS non valida:', {
@@ -249,7 +261,8 @@ export const sendInvoiceEmail = async (
       serviceId: EMAILJS_SERVICE_ID,
       templateId: EMAILJS_TEMPLATE_ID,
       toEmail: patientEmail,
-      subject: emailData.subject
+      subject: emailData.subject,
+      currentUrl: window.location.origin
     });
 
     const result = await emailjs.send(
@@ -306,6 +319,14 @@ export const sendInvoiceEmail = async (
     if (error && typeof error === 'object' && 'text' in error) {
       console.error('Errore EmailJS:', error);
     }
+    
+    // Enhanced error logging for production debugging
+    console.error('Contesto errore:', {
+      userAgent: navigator.userAgent,
+      url: window.location.href,
+      timestamp: new Date().toISOString(),
+      emailjsInitialized: typeof emailjs !== 'undefined'
+    });
     
     // Show user-friendly error message
     alert(`Errore nell'invio email: ${error instanceof Error ? error.message : 'Errore sconosciuto'}`);

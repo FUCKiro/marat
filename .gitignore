@@ -7,11 +7,10 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# Dependencies
 node_modules
-
-# Build outputs
+!.env.example
 dist
+.env
 dist-ssr
 *.local
 
@@ -22,15 +21,7 @@ dist-ssr
 
 # Firebase sensitive files
 firebase-service-account.json
-.firebase/
-
-# Development files
-.bolt/
-*.xlsx
-*.xls
-test-email.html
-make_automation_guide.md
-make_scenario_json.json
+firebase-service-account-*.json
 
 # Editor directories and files
 .vscode/*
