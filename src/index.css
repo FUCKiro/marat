@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Ensure white background for content areas only, not the hero section */
+body {
+  background-color: white;
+  min-height: 100vh;
+}

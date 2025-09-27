@@ -1,0 +1,12 @@
+{
+  "rules": {
+    "users": {
+      ".read": "auth != null && (get(/users/$(auth.uid)).data.role === 'admin' || resource.id === auth.uid)",
+      ".write": "auth != null && get(/users/$(auth.uid)).data.role === 'admin'"
+    },
+    "visits": {
+      ".read": "auth != null && (get(/users/$(auth.uid)).data.role === 'admin' || get(/users/$(auth.uid)).data.role === 'operator' || resource.data.patientId === auth.uid)",
+      ".write": "auth != null && (get(/users/$(auth.uid)).data.role === 'admin' || get(/users/$(auth.uid)).data.role === 'operator')"
+    }
+  }
+}
