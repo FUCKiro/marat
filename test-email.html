@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test EmailJS</title>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+</head>
+<body>
+    <h1>Test EmailJS Configuration</h1>
+    <button onclick="testEmail()">Test Email</button>
+    <div id="result"></div>
+
+    <script>
+        // Configurazione EmailJS (sostituisci con i tuoi valori)
+        const SERVICE_ID = 'service_a898hzq';
+        const TEMPLATE_ID = 'template_1qpfweo';
+        const PUBLIC_KEY = 'pCRTWkQIVVrJKXUSo';
+
+        // Inizializza EmailJS
+        emailjs.init(PUBLIC_KEY);
+
+        async function testEmail() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Invio in corso...';
+
+            try {
+                console.log('=== INIZIO TEST EMAILJS ===');
+                console.log('Configurazione:', {
+                    serviceId: SERVICE_ID,
+                    templateId: TEMPLATE_ID,
+                    publicKey: PUBLIC_KEY
+                });
+
+                // Test 1: Verifica che EmailJS sia caricato
+                if (typeof emailjs === 'undefined') {
+                    throw new Error('EmailJS non è caricato correttamente');
+                }
+                console.log('✅ EmailJS caricato');
+
+                // Test 2: Verifica inizializzazione
+                console.log('Inizializzazione EmailJS...');
+                emailjs.init(PUBLIC_KEY);
+                console.log('✅ EmailJS inizializzato');
+
+                const templateParams = {
+                    to_email: 'test@example.com',
+                    to_name: 'Test User',
+                    subject: 'Test Email',
+                    message: 'Questo è un test email da EmailJS',
+                    invoice_number: 'TEST-001',
+                    invoice_date: '01/01/2024',
+                    total_amount: '€ 100,00',
+                    patient_name: 'Paziente Test',
+                    from_name: 'Associazione Maratonda',
+                    from_email: 'associazionemaratonda@gmail.com',
+                    invoice_type: 'Test',
+                    due_date: '31/01/2024'
+                };
+
+                console.log('Parametri template:', templateParams);
+                console.log('Invio email...');
+
+                const result = await emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams);
+                
+                console.log('✅ Risultato:', result);
+                resultDiv.innerHTML = `✅ Email inviata con successo! Status: ${result.status}`;
+                
+            } catch (error) {
+                console.error('❌ Errore completo:', error);
+                console.error('Tipo errore:', typeof error);
+                console.error('Proprietà errore:', Object.keys(error));
+                
+                let errorMessage = 'Errore sconosciuto';
+                if (error.message) {
+                    errorMessage = error.message;
+                } else if (error.text) {
+                    errorMessage = error.text;
+                } else if (error.status) {
+                    errorMessage = `Status: ${error.status}`;
+                } else {
+                    errorMessage = JSON.stringify(error, null, 2);
+                }
+                
+                resultDiv.innerHTML = `❌ Errore: ${errorMessage}`;
+            }
+        }
+    </script>
+</body>
+</html>

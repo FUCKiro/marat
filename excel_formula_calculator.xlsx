@@ -1,0 +1,12 @@
+Paziente,Email,Ore Psicoterapia,Ore Psicoeducazione,Ore ABA,Ore Logopedia,Ore Neuropsicomotricità,Ore Gruppo,Ore GLO,Totale €,Formula
+Mario Rossi,mario@email.com,4.00,2.00,1.50,1.00,0.00,0.00,0.00,=C2*60+D2*50+E2*65+F2*55+G2*60+H2*40+I2*45,Esempio paziente
+,,,,,,,,,=SUM(J:J),Totale Generale
+
+Prezzi Orari:,,,,,,,,
+Psicoterapia,60,,,,,,,,
+Psicoeducazione,50,,,,,,,,
+ABA,65,,,,,,,,
+Logopedia,55,,,,,,,,
+Neuropsicomotricità,60,,,,,,,,
+Gruppo,40,,,,,,,,
+GLO,45,,,,,,,,

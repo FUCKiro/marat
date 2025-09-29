@@ -185,9 +185,9 @@ export function useInvoicing() {
           province: 'N/A'
         } as BillingInfo,
         items: patientTotal.items,
-        subtotal: patientTotal.totalAmount,
-        tax: patientTotal.totalAmount * 0.22, // 22% IVA
-        total: patientTotal.totalAmount * 1.22,
+        subtotal: patientTotal.totalAmount / 1.22, // Scorporo IVA dal totale IVA inclusa
+        tax: patientTotal.totalAmount - (patientTotal.totalAmount / 1.22), // IVA scorporata
+        total: patientTotal.totalAmount, // Il totale è già IVA inclusa
         month: month,
         year: year,
         status: 'proforma',

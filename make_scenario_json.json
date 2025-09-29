@@ -1,0 +1,191 @@
+{
+  "name": "Calcolo Totali Mensili Pazienti",
+  "flow": [
+    {
+      "id": 1,
+      "module": "builtin:WatchFiles",
+      "version": 1,
+      "parameters": {
+        "path": "/path/to/visite/exports/",
+        "pattern": "Visite_*.xlsx",
+        "recursive": false
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": 2,
+      "module": "microsoft-excel:parseExcel",
+      "version": 1,
+      "parameters": {
+        "sheetName": "Riepilogo",
+        "firstRowHeaders": true
+      },
+      "mapper": {
+        "file": "{{1.path}}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": 3,
+      "module": "microsoft-excel:parseExcel",
+      "version": 1,
+      "parameters": {
+        "sheetName": "Sheet1",
+        "firstRowHeaders": true
+      },
+      "mapper": {
+        "file": "/path/to/template_prezzi_terapie.xlsx"
+      },
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 150
+        }
+      }
+    },
+    {
+      "id": 4,
+      "module": "builtin:BasicIterator",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "array": "{{2.output}}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": 5,
+      "module": "builtin:MathOperations",
+      "version": 1,
+      "parameters": {
+        "operation": "custom"
+      },
+      "mapper": {
+        "expression": "parseFloat({{4.`Ore Psicoterapia`}}) * 60 + parseFloat({{4.`Ore Psicoeducazione`}}) * 50 + parseFloat({{4.`Ore ABA`}}) * 65 + parseFloat({{4.`Ore Logopedia`}}) * 55 + parseFloat({{4.`Ore Neuropsicomotricità`}}) * 60 + parseFloat({{4.`Ore Gruppo`}}) * 40 + parseFloat({{4.`Ore GLO`}}) * 45"
+      },
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": 6,
+      "module": "builtin:ArrayAggregator",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "array": [
+          {
+            "paziente": "{{4.Paziente}}",
+            "email": "{{4.Email}}",
+            "ore_totali": "{{4.`Ore Totali`}}",
+            "importo_totale": "{{5.result}}",
+            "psicoterapia_euro": "{{parseFloat(4.`Ore Psicoterapia`) * 60}}",
+            "psicoeducazione_euro": "{{parseFloat(4.`Ore Psicoeducazione`) * 50}}",
+            "aba_euro": "{{parseFloat(4.`Ore ABA`) * 65}}",
+            "logopedia_euro": "{{parseFloat(4.`Ore Logopedia`) * 55}}",
+            "neuropsicomotricita_euro": "{{parseFloat(4.`Ore Neuropsicomotricità`) * 60}}",
+            "gruppo_euro": "{{parseFloat(4.`Ore Gruppo`) * 40}}",
+            "glo_euro": "{{parseFloat(4.`Ore GLO`) * 45}}"
+          }
+        ]
+      },
+      "metadata": {
+        "designer": {
+          "x": 1200,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": 7,
+      "module": "microsoft-excel:createExcel",
+      "version": 1,
+      "parameters": {
+        "sheetName": "Fatturazione Mensile"
+      },
+      "mapper": {
+        "filename": "Fatturazione_{{formatDate(now; \"MMMM_YYYY\")}}.xlsx",
+        "data": "{{6.array}}",
+        "headers": [
+          "Paziente",
+          "Email", 
+          "Ore Totali",
+          "Importo Totale €",
+          "Psicoterapia €",
+          "Psicoeducazione €", 
+          "ABA €",
+          "Logopedia €",
+          "Neuropsicomotricità €",
+          "Gruppo €",
+          "GLO €"
+        ]
+      },
+      "metadata": {
+        "designer": {
+          "x": 1500,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": 8,
+      "module": "email:SendEmail",
+      "version": 1,
+      "parameters": {
+        "account": "your-email-account"
+      },
+      "mapper": {
+        "to": "admin@yourdomain.com",
+        "subject": "Report Fatturazione Mensile - {{formatDate(now; \"MMMM YYYY\")}}",
+        "html": "<h2>Report Fatturazione Mensile</h2><p>In allegato il report di fatturazione per il mese di {{formatDate(now; \"MMMM YYYY\")}}.</p><p><strong>Riepilogo:</strong></p><ul><li>Pazienti elaborati: {{length(6.array)}}</li><li>Importo totale: €{{sum(6.array[].importo_totale)}}</li></ul>",
+        "attachments": [
+          {
+            "fileName": "{{7.filename}}",
+            "data": "{{7.data}}"
+          }
+        ]
+      },
+      "metadata": {
+        "designer": {
+          "x": 1800,
+          "y": 0
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxCycles": 1,
+      "autoCommit": true,
+      "sequential": false,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false
+    },
+    "designer": {
+      "orphans": []
+    },
+    "zone": "eu1.make.com"
+  }
+}
