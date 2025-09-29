@@ -68,7 +68,7 @@ export default function Hero3D() {
         style={{ touchAction: 'none' }}
       >
         <spline-viewer 
-          url="https://prod.spline.design/Ln0o0JyxBOoJyN1G/scene.splinecode"
+          url="https://prod.spline.design/STN647iRqTVmV2vh/scene.splinecode"
           loading="eager"
           events-target="global"
           style={{
