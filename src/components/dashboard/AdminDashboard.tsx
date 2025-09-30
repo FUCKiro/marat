@@ -154,16 +154,7 @@ export default function AdminDashboard({
               >
                 {showAddPatient ? 'Annulla' : 'Aggiungi Paziente'}
               </button>
-              <button
-                onClick={() => {
-                  setShowAddVisit(!showAddVisit);
-                  setShowAddOperator(false);
-                  setShowAddPatient(false);
-                }}
-                className="bg-teal-600 text-white px-4 py-2 rounded-md hover:bg-teal-700 transition-colors text-sm"
-              >
-                {showAddVisit ? 'Annulla' : 'Aggiungi Visita'}
-              </button>
+
             </div>
           </div>
 
@@ -183,16 +174,7 @@ export default function AdminDashboard({
             />
           )}
 
-          {showAddVisit && (
-            <AdminVisitForm
-              error={error}
-              success={success}
-              onSubmit={onAddVisit}
-              operators={operators}
-              patients={patients}
-              isEditing={false}
-            />
-          )}
+
 
           {editingVisit && !showAddVisit && (
             <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
@@ -247,14 +229,37 @@ export default function AdminDashboard({
       )}
 
       {activeTab === 'visits' && (
-        <VisitsList
-          isAdmin={true}
-          exporting={exporting}
-          onExport={onExport}
-          onEdit={setEditingVisit}
-          onDelete={onDeleteVisit}
-          deletingVisit={deletingVisit}
-        />
+        <div className="mb-8">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-semibold text-gray-800">Gestione Visite</h2>
+            <button
+              onClick={() => setShowAddVisit(!showAddVisit)}
+              className="bg-teal-600 text-white px-4 py-2 rounded-md hover:bg-teal-700 transition-colors"
+            >
+              {showAddVisit ? 'Annulla' : 'Aggiungi Visita'}
+            </button>
+          </div>
+
+          {showAddVisit && (
+            <AdminVisitForm
+              error={error}
+              success={success}
+              onSubmit={onAddVisit}
+              operators={operators}
+              patients={patients}
+              isEditing={false}
+            />
+          )}
+
+          <VisitsList
+            isAdmin={true}
+            exporting={exporting}
+            onExport={onExport}
+            onEdit={setEditingVisit}
+            onDelete={onDeleteVisit}
+            deletingVisit={deletingVisit}
+          />
+        </div>
       )}
 
       {activeTab === 'prices' && (
