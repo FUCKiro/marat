@@ -58,6 +58,19 @@ export default function InvoicePDFGenerator({ invoice, onPDFGenerated, onEmailSe
     }
   };
 
+  const blobToBase64 = (blob: Blob): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const dataUrl = reader.result as string;
+        const base64 = dataUrl.split(',')[1] || '';
+        resolve(base64);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  };
+
   const sendEmailWithInvoice = async () => {
     setEmailSending(true);
     setEmailError('');
@@ -69,14 +82,46 @@ export default function InvoicePDFGenerator({ invoice, onPDFGenerated, onEmailSe
         return;
       }
       
-      const success = await sendInvoiceEmail(invoice, billingEmail);
-      if (success) {
-        setEmailSent(true);
-        if (onEmailSent) {
-          onEmailSent();
+      // Genera PDF per allegato
+      if (invoiceRef.current) {
+        const canvas = await html2canvas(invoiceRef.current, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#ffffff'
+        });
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const imgWidth = 210;
+        const pageHeight = 295;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        let heightLeft = imgHeight;
+        let position = 0;
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+        while (heightLeft >= 0) {
+          position = heightLeft - imgHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+          heightLeft -= pageHeight;
+        }
+        const pdfBlob = pdf.output('blob');
+        const pdfBase64 = await blobToBase64(pdfBlob);
+        const success = await sendInvoiceEmail(invoice, billingEmail, { pdfBase64 });
+        if (success) {
+          setEmailSent(true);
+          if (onEmailSent) onEmailSent();
+        } else {
+          setEmailError('Errore nell\'invio dell\'email. Riprova.');
         }
       } else {
-        setEmailError('Errore nell\'invio dell\'email. Riprova.');
+        const success = await sendInvoiceEmail(invoice, billingEmail);
+        if (success) {
+          setEmailSent(true);
+          if (onEmailSent) onEmailSent();
+        } else {
+          setEmailError('Errore nell\'invio dell\'email. Riprova.');
+        }
       }
     } catch (error) {
       console.error('Errore invio email:', error);

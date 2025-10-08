@@ -1,15 +1,10 @@
-import emailjs from '@emailjs/browser';
+// Email backend via Netlify Function
 import { Invoice } from '../types';
 import { db } from '../config/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 
-// Configurazione EmailJS
-const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID || 'your_service_id';
-const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID || 'your_template_id';
-const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY || 'your_public_key';
-
-// Inizializza EmailJS
-emailjs.init(EMAILJS_PUBLIC_KEY);
+// Endpoint Netlify Functions
+const NETLIFY_EMAIL_ENDPOINT = '/.netlify/functions/send-invoice-email';
 
 export interface EmailData {
   to_email: string;
@@ -231,29 +226,13 @@ Codice fiscale: 16815601006 - Partita IVA: 16815601006`;
 
 export const sendInvoiceEmail = async (
   invoice: Invoice,
-  patientEmail: string
+  patientEmail: string,
+  options?: { pdfBase64?: string }
 ): Promise<boolean> => {
   try {
-    // Log environment variables for debugging (without exposing sensitive data)
-    console.log('Environment check:', {
-      hasServiceId: !!EMAILJS_SERVICE_ID && EMAILJS_SERVICE_ID !== 'your_service_id',
-      hasTemplateId: !!EMAILJS_TEMPLATE_ID && EMAILJS_TEMPLATE_ID !== 'your_template_id',
-      hasPublicKey: !!EMAILJS_PUBLIC_KEY && EMAILJS_PUBLIC_KEY !== 'your_public_key',
-      serviceIdLength: EMAILJS_SERVICE_ID?.length || 0,
-      templateIdLength: EMAILJS_TEMPLATE_ID?.length || 0,
-      publicKeyLength: EMAILJS_PUBLIC_KEY?.length || 0,
-      isProduction: import.meta.env.PROD,
-      mode: import.meta.env.MODE
-    });
-
-    // Validate configuration first
+    // Backend configuration check
     if (!validateEmailConfiguration()) {
-      console.error('Configurazione EmailJS non valida:', {
-        serviceId: EMAILJS_SERVICE_ID,
-        templateId: EMAILJS_TEMPLATE_ID,
-        publicKey: EMAILJS_PUBLIC_KEY ? 'configurato' : 'mancante'
-      });
-      throw new Error('Configurazione EmailJS non completa. Verifica le variabili d\'ambiente.');
+      throw new Error('Configurazione email non completa. Contatta l\'amministratore.');
     }
 
     // Se non c'è email di fatturazione, non inviare
@@ -289,21 +268,14 @@ export const sendInvoiceEmail = async (
       message: getEmailMessage(invoice)
     };
 
-    console.log('Invio email con dati:', {
-      serviceId: EMAILJS_SERVICE_ID,
-      templateId: EMAILJS_TEMPLATE_ID,
-      toEmail: patientEmail,
-      subject: emailData.subject,
-      currentUrl: window.location.origin
+    const resultResponse = await fetch(NETLIFY_EMAIL_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...emailData, pdfBase64: options?.pdfBase64 || undefined })
     });
 
-    const result = await emailjs.send(
-      EMAILJS_SERVICE_ID,
-      EMAILJS_TEMPLATE_ID,
-      emailData
-    );
-
-    if (result.status === 200) {
+    if (resultResponse.ok) {
+      const result = await resultResponse.json();
       console.log('Email inviata con successo:', result);
       
       // Update the invoice with email sent timestamp
@@ -331,7 +303,8 @@ export const sendInvoiceEmail = async (
       
       return true;
     } else {
-      console.error('Errore nell\'invio email - Status non 200:', result);
+      const errorText = await resultResponse.text();
+      console.error('Errore nell\'invio email - Status non 200:', resultResponse.status, errorText);
       return false;
     }
 
@@ -347,17 +320,12 @@ export const sendInvoiceEmail = async (
       });
     }
     
-    // Log EmailJS specific errors
-    if (error && typeof error === 'object' && 'text' in error) {
-      console.error('Errore EmailJS:', error);
-    }
-    
     // Enhanced error logging for production debugging
     console.error('Contesto errore:', {
       userAgent: navigator.userAgent,
       url: window.location.href,
       timestamp: new Date().toISOString(),
-      emailjsInitialized: typeof emailjs !== 'undefined'
+      backendEndpoint: NETLIFY_EMAIL_ENDPOINT
     });
     
     // Show user-friendly error message
@@ -475,10 +443,6 @@ export const getEmailStatusText = (invoice: Invoice): string => {
 };
 
 export const validateEmailConfiguration = (): boolean => {
-  return !!(EMAILJS_SERVICE_ID && 
-           EMAILJS_TEMPLATE_ID && 
-           EMAILJS_PUBLIC_KEY &&
-           EMAILJS_SERVICE_ID !== 'your_service_id' &&
-           EMAILJS_TEMPLATE_ID !== 'your_template_id' &&
-           EMAILJS_PUBLIC_KEY !== 'your_public_key');
+  // Con backend su Netlify Functions non richiediamo variabili client
+  return true;
 };
