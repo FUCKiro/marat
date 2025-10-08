@@ -147,7 +147,226 @@ export default function InvoicesList() {
 
     setSendingEmail(invoice.id);
     try {
-      const success = await sendInvoiceEmail(invoice, invoice.billingInfo.email);
+      // Generate PDF for email attachment using html2canvas (same as InvoicePDFGenerator)
+      let pdfBase64 = '';
+      try {
+        // Create a temporary div to render the invoice
+        const tempDiv = document.createElement('div');
+        tempDiv.style.position = 'absolute';
+        tempDiv.style.left = '-9999px';
+        tempDiv.style.top = '-9999px';
+        tempDiv.style.width = '210mm';
+        tempDiv.style.minHeight = '297mm';
+        tempDiv.style.backgroundColor = 'white';
+        tempDiv.style.padding = '20mm';
+        tempDiv.style.boxSizing = 'border-box';
+        
+        // Import html2canvas and jsPDF dynamically
+        const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
+          import('html2canvas'),
+          import('jspdf')
+        ]);
+        
+        // Create invoice HTML content (optimized for A4)
+        tempDiv.innerHTML = `
+          <div style="font-family: Arial, sans-serif; color: #333; font-size: 12px; line-height: 1.3;">
+            ${invoice.status === 'proforma' ? `
+              <div style="margin-bottom: 12px; padding: 8px; background: #fef3c7; border: 1px solid #f59e0b; border-radius: 6px;">
+                <p style="margin: 0; font-size: 11px; color: #92400e; font-weight: 500;">
+                  Documento non valido ai fini fiscali - Convertire in fattura finale per la validità fiscale
+                </p>
+              </div>
+            ` : ''}
+            
+            <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+              <div style="flex: 1;">
+                <h1 style="font-size: 18px; font-weight: bold; margin-bottom: 6px;">
+                  ${invoice.status === 'proforma' ? 'FATTURA PROFORMA' : 'FATTURA'}
+                </h1>
+                <div style="color: #666; font-size: 10px;">
+                  <p style="margin: 2px 0; font-weight: 600;">Associazione Maratonda</p>
+                  <p style="margin: 2px 0;">Largo Bacone 16</p>
+                  <p style="margin: 2px 0;">00137 Roma</p>
+                  <p style="margin: 2px 0;">Codice Fiscale: 16815601006</p>
+                  <p style="margin: 2px 0;">Partita IVA: 16815601006</p>
+                  <p style="margin: 2px 0;">Tel: +39 351 479 0620</p>
+                  <p style="margin: 2px 0;">Email: associazionemaratonda@gmail.com</p>
+                </div>
+              </div>
+              <div style="text-align: right; flex-shrink: 0; margin-left: 20px;">
+                <div style="border: 2px solid ${invoice.status === 'proforma' ? '#f59e0b' : '#14b8a6'}; border-radius: 6px; padding: 12px; background: ${invoice.status === 'proforma' ? '#fef3c7' : '#f0fdfa'};">
+                  <p style="margin: 0; font-size: 10px; color: #666;">
+                    ${invoice.status === 'proforma' ? 'Numero Proforma' : 'Numero Fattura'}
+                  </p>
+                  <p style="margin: 4px 0; font-size: 16px; font-weight: bold; color: ${invoice.status === 'proforma' ? '#d97706' : '#0f766e'};">
+                    ${invoice.invoiceNumber}
+                  </p>
+                  <p style="margin: 2px 0; font-size: 10px; color: #666;">
+                    Data: ${new Intl.DateTimeFormat('it-IT').format(invoice.createdAt)}
+                  </p>
+                  <p style="margin: 2px 0; font-size: 10px; color: #666;">
+                    Scadenza: ${new Intl.DateTimeFormat('it-IT').format(invoice.dueDate)}
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+              <h2 style="font-size: 13px; font-weight: 600; margin-bottom: 8px;">Fatturato a:</h2>
+              <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 10px;">
+                <p style="margin: 2px 0; font-weight: 600; font-size: 11px;">${invoice.billingInfo.parentName} ${invoice.billingInfo.parentSurname}</p>
+                <p style="margin: 2px 0; font-size: 10px;">${invoice.billingInfo.address}</p>
+                <p style="margin: 2px 0; font-size: 10px;">${invoice.billingInfo.postalCode} ${invoice.billingInfo.city} (${invoice.billingInfo.province})</p>
+                ${invoice.billingInfo.fiscalCode ? `<p style="margin: 2px 0; font-size: 10px;">C.F.: ${invoice.billingInfo.fiscalCode}</p>` : ''}
+                ${invoice.billingInfo.vatNumber ? `<p style="margin: 2px 0; font-size: 10px;">P.IVA: ${invoice.billingInfo.vatNumber}</p>` : ''}
+                <p style="margin: 2px 0; font-size: 10px;">${invoice.billingInfo.email}</p>
+                ${invoice.billingInfo.phone ? `<p style="margin: 2px 0; font-size: 10px;">Tel: ${invoice.billingInfo.phone}</p>` : ''}
+                <p style="margin: 4px 0 2px 0; font-size: 9px; color: #666;">Paziente: ${invoice.patientName}</p>
+              </div>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+              <h2 style="font-size: 13px; font-weight: 600; margin-bottom: 10px;">Dettaglio Servizi</h2>
+              <table style="width: 100%; border-collapse: collapse; border: 1px solid #e5e7eb; border-radius: 6px; overflow: hidden;">
+                <thead>
+                  <tr style="background: #f9fafb;">
+                    <th style="padding: 8px; text-align: left; border-bottom: 1px solid #e5e7eb; font-size: 9px; font-weight: 500; color: #6b7280; text-transform: uppercase;">Descrizione</th>
+                    <th style="padding: 8px; text-align: center; border-bottom: 1px solid #e5e7eb; font-size: 9px; font-weight: 500; color: #6b7280; text-transform: uppercase;">ore/incontri</th>
+                    <th style="padding: 8px; text-align: right; border-bottom: 1px solid #e5e7eb; font-size: 9px; font-weight: 500; color: #6b7280; text-transform: uppercase;">Prezzo/Ora</th>
+                    <th style="padding: 8px; text-align: right; border-bottom: 1px solid #e5e7eb; font-size: 9px; font-weight: 500; color: #6b7280; text-transform: uppercase;">Totale</th>
+                  </tr>
+                </thead>
+                <tbody style="background: white;">
+                  ${invoice.items.map((item, index) => `
+                    <tr ${index < invoice.items.length - 1 ? 'style="border-bottom: 1px solid #e5e7eb;"' : ''}>
+                      <td style="padding: 8px; font-size: 11px; color: #111827;">${item.therapyType}</td>
+                      <td style="padding: 8px; text-align: center; font-size: 11px; color: #111827;">${item.hours.toFixed(1)}</td>
+                      <td style="padding: 8px; text-align: right; font-size: 11px; color: #111827;">
+                        ${new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(item.pricePerHour)}
+                      </td>
+                      <td style="padding: 8px; text-align: right; font-size: 11px; font-weight: 500; color: #111827;">
+                        ${new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(item.total)}
+                      </td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+            
+            <!-- Totals -->
+            <div style="display: flex; justify-content: flex-end; margin-bottom: 20px;">
+              <div style="width: 250px;">
+                <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px;">
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 11px;">
+                    <span style="color: #6b7280;">Subtotale:</span>
+                    <span style="font-weight: 500;">${new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(invoice.subtotal)}</span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 11px;">
+                    <span style="color: #6b7280;">${invoice.tax === 0 ? 'IVA: Esente (0%)' : 'IVA (22%):'}</span>
+                    <span style="font-weight: 500;">${new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(invoice.tax)}</span>
+                  </div>
+                  <div style="border-top: 1px solid #d1d5db; padding-top: 6px; margin-top: 6px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 14px; font-weight: bold;">
+                      <span style="color: #374151;">Totale:</span>
+                      <span style="color: #0f766e;">${new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(invoice.total)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Payment Info -->
+            <div style="border-top: 1px solid #e5e7eb; padding-top: 16px;">
+              <div style="margin-bottom: 12px;">
+                <p style="font-size: 10px; color: #374151; line-height: 1.4; margin: 0;">
+                  Il conteggio delle ore è stato stabilito in base al foglio presenza dei terapisti. Ogni mese il terapista
+                  lascerà a casa il foglio presenze che verrà firmato di volta in volta dal genitore del bambino.
+                </p>
+              </div>
+              <h3 style="font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 8px;">Modalità di Pagamento</h3>
+              <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 10px;">
+                <p style="font-size: 10px; color: #374151; margin-bottom: 6px;">
+                  <strong>Bonifico Bancario:</strong>
+                </p>
+                <p style="font-size: 9px; color: #6b7280; margin: 2px 0;">Banca: Banca di credito cooperativo di Roma-BCC</p>
+                <p style="font-size: 9px; color: #6b7280; margin: 2px 0;">IBAN: IT 29 D 08327 03200 000000046622</p>
+                <p style="font-size: 9px; color: #6b7280; margin: 2px 0;">Intestato a: MARATONDA SOCIETA' COOPERATIVA SOCIALE</p>
+                <p style="font-size: 9px; color: #6b7280; margin: 4px 0 2px 0;">
+                  <strong>Causale:</strong> Fattura n. ${invoice.invoiceNumber}
+                </p>
+              </div>
+            </div>
+            
+            <!-- Footer -->
+            <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid #e5e7eb; text-align: center; font-size: 8px; color: #6b7280;">
+              <p style="margin: 2px 0;">
+                ${invoice.status === 'proforma' 
+                  ? 'Questa fattura proforma è stata generata automaticamente dal sistema di gestione dell\'Associazione Maratonda'
+                  : 'Questa fattura è stata generata automaticamente dal sistema di gestione dell\'Associazione Maratonda'
+                }
+              </p>
+              <p style="margin: 2px 0;">Per informazioni: associazionemaratonda@gmail.com | Tel: +39 351 479 0620</p>
+              <p style="margin: 2px 0;">La famiglia riceverà entro 30 giorni lavorativi la fatturazione tramite posta elettronica dell'intero importo.</p>
+              ${invoice.tax === 0 ? `
+                <p style="margin: 4px 0; color: #6b7280;">
+                  Operazione esente IVA ai sensi dell'art. 10 DPR 633/72
+                </p>
+              ` : ''}
+              ${invoice.status === 'proforma' ? `
+                <p style="margin: 4px 0; color: #d97706; font-weight: 500;">
+                  ATTENZIONE: Questo documento non ha valore fiscale fino alla conversione in fattura finale
+                </p>
+              ` : ''}
+            </div>
+          </div>
+        `;
+        
+        document.body.appendChild(tempDiv);
+        
+        // Generate canvas from HTML with optimized settings to reduce size
+        const canvas = await html2canvas(tempDiv, {
+          scale: 1.5, // Reduced from 2 to 1.5 to decrease file size
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#ffffff'
+        });
+        
+        // Remove temporary div
+        document.body.removeChild(tempDiv);
+        
+        // Create PDF
+        const imgData = canvas.toDataURL('image/jpeg', 0.8); // Use JPEG with 80% quality instead of PNG
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        
+        const imgWidth = 210; // A4 width in mm
+        const pageHeight = 295; // A4 height in mm
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        let heightLeft = imgHeight;
+        
+        let position = 0;
+        
+        // Add first page
+        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+        
+        // Add additional pages if needed
+        while (heightLeft >= 0) {
+          position = heightLeft - imgHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+          heightLeft -= pageHeight;
+        }
+        
+        // Get PDF as base64
+        pdfBase64 = pdf.output('datauristring').split(',')[1]; // Remove data:application/pdf;base64, prefix
+        
+      } catch (pdfError) {
+        console.error('Errore nella generazione del PDF:', pdfError);
+        // If PDF generation fails, send email without attachment
+        console.log('Invio email senza allegato PDF a causa dell\'errore');
+      }
+      
+      const success = await sendInvoiceEmail(invoice, invoice.billingInfo.email, pdfBase64);
       if (success) {
         // Update the invoice in the local state with the new email timestamp
         setInvoices(prev => prev.map(inv => 
@@ -168,6 +387,7 @@ export default function InvoicesList() {
           await updateDoc(invoiceRef, updateData);
         }
         
+        setSuccess(pdfBase64 ? 'Email con PDF inviata con successo' : 'Email inviata con successo (PDF non disponibile)');
         console.log('Email inviata con successo');
       } else {
         setError('Errore nell\'invio dell\'email');

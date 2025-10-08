@@ -58,19 +58,6 @@ export default function InvoicePDFGenerator({ invoice, onPDFGenerated, onEmailSe
     }
   };
 
-  const blobToBase64 = (blob: Blob): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const dataUrl = reader.result as string;
-        const base64 = dataUrl.split(',')[1] || '';
-        resolve(base64);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-  };
-
   const sendEmailWithInvoice = async () => {
     setEmailSending(true);
     setEmailError('');
@@ -81,47 +68,56 @@ export default function InvoicePDFGenerator({ invoice, onPDFGenerated, onEmailSe
         setEmailError('Email di fatturazione non disponibile.');
         return;
       }
+
+      // Generate PDF and get base64
+      if (!invoiceRef.current) {
+        setEmailError('Errore nella generazione del PDF.');
+        return;
+      }
+
+      // Capture the invoice as canvas
+      const canvas = await html2canvas(invoiceRef.current, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff'
+      });
+
+      // Create PDF
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
       
-      // Genera PDF per allegato
-      if (invoiceRef.current) {
-        const canvas = await html2canvas(invoiceRef.current, {
-          scale: 2,
-          useCORS: true,
-          allowTaint: true,
-          backgroundColor: '#ffffff'
-        });
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const imgWidth = 210;
-        const pageHeight = 295;
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-        let heightLeft = imgHeight;
-        let position = 0;
+      const imgWidth = 210; // A4 width in mm
+      const pageHeight = 295; // A4 height in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+
+      let position = 0;
+
+      // Add first page
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      // Add additional pages if needed
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
         pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
         heightLeft -= pageHeight;
-        while (heightLeft >= 0) {
-          position = heightLeft - imgHeight;
-          pdf.addPage();
-          pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-          heightLeft -= pageHeight;
-        }
-        const pdfBlob = pdf.output('blob');
-        const pdfBase64 = await blobToBase64(pdfBlob);
-        const success = await sendInvoiceEmail(invoice, billingEmail, { pdfBase64 });
-        if (success) {
-          setEmailSent(true);
-          if (onEmailSent) onEmailSent();
-        } else {
-          setEmailError('Errore nell\'invio dell\'email. Riprova.');
+      }
+
+      // Get PDF as base64
+      const pdfBase64 = pdf.output('datauristring').split(',')[1]; // Remove data:application/pdf;base64, prefix
+      
+      // Send email with PDF attachment
+      const success = await sendInvoiceEmail(invoice, billingEmail, pdfBase64);
+      if (success) {
+        setEmailSent(true);
+        if (onEmailSent) {
+          onEmailSent();
         }
       } else {
-        const success = await sendInvoiceEmail(invoice, billingEmail);
-        if (success) {
-          setEmailSent(true);
-          if (onEmailSent) onEmailSent();
-        } else {
-          setEmailError('Errore nell\'invio dell\'email. Riprova.');
-        }
+        setEmailError('Errore nell\'invio dell\'email. Riprova.');
       }
     } catch (error) {
       console.error('Errore invio email:', error);

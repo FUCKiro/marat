@@ -1,10 +1,6 @@
-// Email backend via Netlify Function
 import { Invoice } from '../types';
 import { db } from '../config/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
-
-// Endpoint Netlify Functions
-const NETLIFY_EMAIL_ENDPOINT = '/.netlify/functions/send-invoice-email';
 
 export interface EmailData {
   to_email: string;
@@ -20,6 +16,21 @@ export interface EmailData {
   subject: string;
   invoice_type: string;
   [key: string]: unknown;
+}
+
+export interface EmailAttachment {
+  filename: string;
+  content: string; // base64 encoded content
+  type: string;
+}
+
+export interface ResendEmailData {
+  to: string;
+  subject: string;
+  html: string;
+  text?: string;
+  attachments?: EmailAttachment[];
+  from?: string;
 }
 
 export const getEmailSubject = (invoice: Invoice): string => {
@@ -38,7 +49,7 @@ export const getEmailSubject = (invoice: Invoice): string => {
   }
 };
 
-const getEmailMessage = (invoice: Invoice): string => {
+export const getEmailMessage = (invoice: Invoice): string => {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('it-IT', {
       style: 'currency',
@@ -227,14 +238,9 @@ Codice fiscale: 16815601006 - Partita IVA: 16815601006`;
 export const sendInvoiceEmail = async (
   invoice: Invoice,
   patientEmail: string,
-  options?: { pdfBase64?: string }
+  pdfBase64?: string
 ): Promise<boolean> => {
   try {
-    // Backend configuration check
-    if (!validateEmailConfiguration()) {
-      throw new Error('Configurazione email non completa. Contatta l\'amministratore.');
-    }
-
     // Se non c'è email di fatturazione, non inviare
     if (!patientEmail) {
       throw new Error('Email di fatturazione non disponibile');
@@ -251,62 +257,102 @@ export const sendInvoiceEmail = async (
       return new Intl.DateTimeFormat('it-IT').format(date);
     };
 
-    const emailData: EmailData = {
-      to_email: patientEmail,
-      to_name: invoice.billingInfo?.parentName ? 
-        `${invoice.billingInfo.parentName} ${invoice.billingInfo.parentSurname}` : 
-        invoice.patientName,
-      invoice_number: invoice.invoiceNumber,
-      invoice_date: formatDate(invoice.createdAt),
-      due_date: formatDate(invoice.dueDate),
-      total_amount: formatCurrency(invoice.total),
-      patient_name: invoice.patientName,
-      from_name: 'Associazione Maratonda',
-      from_email: 'associazionemaratonda@gmail.com',
-      subject: getEmailSubject(invoice),
-      invoice_type: invoice.status === 'proforma' ? 'Proforma' : 'Finale',
-      message: getEmailMessage(invoice)
+    const recipientName = invoice.billingInfo?.parentName ? 
+      `${invoice.billingInfo.parentName} ${invoice.billingInfo.parentSurname}` : 
+      invoice.patientName;
+
+    const subject = getEmailSubject(invoice);
+    // const htmlMessage = getEmailMessage(invoice); // unused
+
+    // Prepare email data for Resend
+    const emailData: ResendEmailData = {
+      to: patientEmail,
+      subject,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #2563eb;">Associazione Maratonda</h2>
+          <p>Gentile ${recipientName},</p>
+          <p>In allegato trova la fattura richiesta.</p>
+          <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3>Dettagli Fattura:</h3>
+            <p><strong>Numero:</strong> ${invoice.invoiceNumber}</p>
+            <p><strong>Data:</strong> ${formatDate(invoice.createdAt)}</p>
+            <p><strong>Scadenza:</strong> ${formatDate(invoice.dueDate)}</p>
+            <p><strong>Importo:</strong> ${formatCurrency(invoice.total)}</p>
+            <p><strong>Paziente:</strong> ${invoice.patientName}</p>
+          </div>
+          <p>Cordiali saluti,<br>Associazione Maratonda</p>
+        </div>
+      `,
+      text: `
+Gentile ${recipientName},
+
+In allegato trova la fattura richiesta.
+
+Dettagli Fattura:
+- Numero: ${invoice.invoiceNumber}
+- Data: ${formatDate(invoice.createdAt)}
+- Scadenza: ${formatDate(invoice.dueDate)}
+- Importo: ${formatCurrency(invoice.total)}
+- Paziente: ${invoice.patientName}
+
+Cordiali saluti,
+Associazione Maratonda
+      `,
+      attachments: pdfBase64 ? [{
+        filename: `Fattura_${invoice.invoiceNumber}.pdf`,
+        content: pdfBase64,
+        type: 'application/pdf'
+      }] : []
     };
 
-    const resultResponse = await fetch(NETLIFY_EMAIL_ENDPOINT, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...emailData, pdfBase64: options?.pdfBase64 || undefined })
+    console.log('Invio email via Netlify Function:', {
+      to: patientEmail,
+      subject,
+      hasAttachment: !!pdfBase64
     });
 
-    if (resultResponse.ok) {
-      const result = await resultResponse.json();
-      console.log('Email inviata con successo:', result);
+    // Call Netlify Function
+    const response = await fetch('http://localhost:9999/.netlify/functions/send-invoice', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(emailData)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Errore nell\'invio email');
+    }
+
+    const result = await response.json();
+    console.log('Email inviata con successo:', result);
+    
+    // Update the invoice with email sent timestamp
+    const now = new Date();
+    if (invoice.status === 'proforma') {
+      invoice.proformaEmailSentAt = now;
+    } else if (invoice.status === 'final' || invoice.status === 'sent' || invoice.status === 'paid' || invoice.status === 'closed') {
+      invoice.finalEmailSentAt = now;
       
-      // Update the invoice with email sent timestamp
-      const now = new Date();
-      if (invoice.status === 'proforma') {
-        invoice.proformaEmailSentAt = now;
-      } else if (invoice.status === 'final' || invoice.status === 'sent' || invoice.status === 'paid' || invoice.status === 'closed') {
-        invoice.finalEmailSentAt = now;
-        
-        // If this is a final invoice email for a paid invoice, update status to closed
-        if (invoice.status === 'paid' && db) {
-          try {
-            const invoiceRef = doc(db, 'invoices', invoice.id);
-            await updateDoc(invoiceRef, {
-              status: 'closed',
-              finalEmailSentAt: now
-            });
-            invoice.status = 'closed';
-            console.log('Invoice status updated to closed after sending final email');
-          } catch (err) {
-            console.error('Error updating invoice status to closed:', err);
-          }
+      // If this is a final invoice email for a paid invoice, update status to closed
+      if (invoice.status === 'paid' && db) {
+        try {
+          const invoiceRef = doc(db, 'invoices', invoice.id);
+          await updateDoc(invoiceRef, {
+            status: 'closed',
+            finalEmailSentAt: now
+          });
+          invoice.status = 'closed';
+          console.log('Invoice status updated to closed after sending final email');
+        } catch (err) {
+          console.error('Error updating invoice status to closed:', err);
         }
       }
-      
-      return true;
-    } else {
-      const errorText = await resultResponse.text();
-      console.error('Errore nell\'invio email - Status non 200:', resultResponse.status, errorText);
-      return false;
     }
+    
+    return true;
 
   } catch (error) {
     console.error('Errore nell\'invio email:', error);
@@ -324,8 +370,7 @@ export const sendInvoiceEmail = async (
     console.error('Contesto errore:', {
       userAgent: navigator.userAgent,
       url: window.location.href,
-      timestamp: new Date().toISOString(),
-      backendEndpoint: NETLIFY_EMAIL_ENDPOINT
+      timestamp: new Date().toISOString()
     });
     
     // Show user-friendly error message
@@ -443,6 +488,7 @@ export const getEmailStatusText = (invoice: Invoice): string => {
 };
 
 export const validateEmailConfiguration = (): boolean => {
-  // Con backend su Netlify Functions non richiediamo variabili client
+  // For Resend integration, we don't need client-side validation
+  // The API key is handled server-side in the Netlify Function
   return true;
 };
