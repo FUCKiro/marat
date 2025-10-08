@@ -93,7 +93,7 @@ ${invoice.patientName}`;
   const getServicesDetails = () => {
     let servicesTable = `DETTAGLIO SERVIZI:
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ Descrizione                    │   Ore   │ Prezzo/Ora │      Totale      │
+│ Descrizione                    │ ore/incontri │ Prezzo/Ora │      Totale      │
 ├─────────────────────────────────────────────────────────────────────────────┤`;
 
     invoice.items.forEach(item => {
@@ -110,14 +110,20 @@ ${invoice.patientName}`;
 
   // Generate totals section
   const getTotalsSection = () => {
+    const ivaLabel = invoice.tax === 0 ? 'IVA: Esente (0%)' : 'IVA (22%)';
     return `RIEPILOGO IMPORTI:
 Subtotale: ${formatCurrency(invoice.subtotal)}
-IVA (22%): ${formatCurrency(invoice.tax)}
+${ivaLabel}: ${formatCurrency(invoice.tax)}
 ─────────────────────────────
 TOTALE: ${formatCurrency(invoice.total)}`;
   };
 
   const baseMessage = `Gentile ${recipientName},`;
+  const taxNote = invoice.tax === 0 
+    ? `
+NOTA FISCALE:
+Operazione esente IVA ai sensi dell’art. 10 DPR 633/72`
+    : '';
   
   if (invoice.status === 'proforma') {
     return `${baseMessage}
@@ -140,23 +146,36 @@ ${getServicesDetails()}
 
 ${getTotalsSection()}
 
+${taxNote}
+
+═══════════════════════════════════════════════════════════════════════════════
+Nota sul conteggio delle ore
+════════════════════════════════════════════════════════════════════════════════
+
+Il conteggio delle ore è stato stabilito in base al foglio presenza dei terapisti. Ogni mese il terapista 
+lascerà a casa il foglio presenze che verrà firmato di volta in volta dal genitore del bambino.
+
 ═══════════════════════════════════════════════════════════════════════════════
 MODALITÀ DI PAGAMENTO
 ═══════════════════════════════════════════════════════════════════════════════
 
 Bonifico Bancario:
-IBAN: IT60 X054 2811 1010 0000 0123 456
-Intestato a: Associazione Maratonda
+Banca: Banca di credito cooperativo di Roma-BCC
+IBAN: IT 29 D 08327 03200 000000046622
+Intestato a: MARATONDA SOCIETA’ COOPERATIVA SOCIALE
 Causale: Fattura Proforma n. ${invoice.invoiceNumber}
 
 Una volta ricevuto il pagamento, Le invieremo automaticamente la fattura finale con valore fiscale.
+
+La famiglia riceverà entro 30 giorni lavorativi la fatturazione tramite posta elettronica dell’intero importo.
 
 Per qualsiasi chiarimento, non esiti a contattarci.
 
 Cordiali saluti,
 Associazione Maratonda
 Tel: +39 351 479 0620
-Email: associazionemaratonda@gmail.com`;
+Email: associazionemaratonda@gmail.com
+Codice fiscale: 16815601006 - Partita IVA: 16815601006`;
   } else {
     return `${baseMessage}
 
@@ -179,21 +198,34 @@ ${getServicesDetails()}
 
 ${getTotalsSection()}
 
+${taxNote}
+
+═══════════════════════════════════════════════════════════════════════════════
+Nota sul conteggio delle ore
+════════════════════════════════════════════════════════════════════════════════
+
+Il conteggio delle ore è stato stabilito in base al foglio presenza dei terapisti. Ogni mese il terapista 
+lascerà a casa il foglio presenze che verrà firmato di volta in volta dal genitore del bambino.
+
 ═══════════════════════════════════════════════════════════════════════════════
 MODALITÀ DI PAGAMENTO
 ═══════════════════════════════════════════════════════════════════════════════
 
 ${invoice.status !== 'paid' ? `Bonifico Bancario:
-IBAN: IT60 X054 2811 1010 0000 0123 456
-Intestato a: Associazione Maratonda
+Banca: Banca di credito cooperativo di Roma-BCC
+IBAN: IT 29 D 08327 03200 000000046622
+Intestato a: MARATONDA SOCIETA’ COOPERATIVA SOCIALE
 Causale: Fattura n. ${invoice.invoiceNumber}` : '✅ PAGAMENTO RICEVUTO - Grazie per aver effettuato il pagamento.'}
+
+La famiglia riceverà entro 30 giorni lavorativi la fatturazione tramite posta elettronica dell’intero importo.
 
 Per qualsiasi chiarimento, non esiti a contattarci.
 
 Cordiali saluti,
 Associazione Maratonda
 Tel: +39 351 479 0620
-Email: associazionemaratonda@gmail.com`;
+Email: associazionemaratonda@gmail.com
+Codice fiscale: 16815601006 - Partita IVA: 16815601006`;
   }
 };
 

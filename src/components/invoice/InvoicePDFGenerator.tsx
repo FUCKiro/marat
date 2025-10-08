@@ -218,7 +218,8 @@ export default function InvoicePDFGenerator({ invoice, onPDFGenerated, onEmailSe
               <p className="font-semibold">Associazione Maratonda</p>
               <p>Largo Bacone 16</p>
               <p>00137 Roma</p>
-              <p>P.IVA: 12345678901</p>
+              <p>Codice Fiscale: 16815601006</p>
+              <p>Partita IVA: 16815601006</p>
               <p>Tel: +39 351 479 0620</p>
               <p>Email: associazionemaratonda@gmail.com</p>
             </div>
@@ -295,10 +296,10 @@ export default function InvoicePDFGenerator({ invoice, onPDFGenerated, onEmailSe
                     Descrizione
                   </th>
                   <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Ore
+                    ore/incontri
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Prezzo/Ora (IVA inclusa)
+                    Prezzo/Ora (esente IVA)
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Totale
@@ -336,7 +337,7 @@ export default function InvoicePDFGenerator({ invoice, onPDFGenerated, onEmailSe
                 <span className="font-medium">{formatCurrency(invoice.subtotal)}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">IVA (22%):</span>
+                <span className="text-gray-600">{invoice.tax === 0 ? 'IVA: Esente (0%)' : 'IVA (22%):'}</span>
                 <span className="font-medium">{formatCurrency(invoice.tax)}</span>
               </div>
               <div className="border-t border-gray-300 pt-2">
@@ -351,13 +352,20 @@ export default function InvoicePDFGenerator({ invoice, onPDFGenerated, onEmailSe
 
         {/* Payment Info */}
         <div className="border-t border-gray-200 pt-6">
+          <div className="mb-4">
+            <p className="text-sm text-gray-700">
+              Il conteggio delle ore è stato stabilito in base al foglio presenza dei terapisti. Ogni mese il terapista
+              lascerà a casa il foglio presenze che verrà firmato di volta in volta dal genitore del bambino.
+            </p>
+          </div>
           <h3 className="text-lg font-semibold text-gray-800 mb-3">Modalità di Pagamento</h3>
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <p className="text-sm text-gray-700 mb-2">
               <strong>Bonifico Bancario:</strong>
             </p>
-            <p className="text-sm text-gray-600">IBAN: IT60 X054 2811 1010 0000 0123 456</p>
-                  <p className="text-sm text-gray-600">Intestato a: Associazione Maratonda</p>
+            <p className="text-sm text-gray-600">Banca: Banca di credito cooperativo di Roma-BCC</p>
+            <p className="text-sm text-gray-600">IBAN: IT 29 D 08327 03200 000000046622</p>
+            <p className="text-sm text-gray-600">Intestato a: MARATONDA SOCIETA’ COOPERATIVA SOCIALE</p>
             <p className="text-sm text-gray-600 mt-2">
               <strong>Causale:</strong> Fattura n. {invoice.invoiceNumber}
             </p>
@@ -373,6 +381,12 @@ export default function InvoicePDFGenerator({ invoice, onPDFGenerated, onEmailSe
             }
           </p>
           <p className="mt-1">Per informazioni: associazionemaratonda@gmail.com | Tel: +39 351 479 0620</p>
+          <p className="mt-1">La famiglia riceverà entro 30 giorni lavorativi la fatturazione tramite posta elettronica dell’intero importo.</p>
+          {invoice.tax === 0 && (
+            <p className="mt-2 text-gray-600">
+              Operazione esente IVA ai sensi dell’art. 10 DPR 633/72
+            </p>
+          )}
           {invoice.status === 'proforma' && (
             <p className="mt-2 text-orange-600 font-medium">
               ATTENZIONE: Questo documento non ha valore fiscale fino alla conversione in fattura finale

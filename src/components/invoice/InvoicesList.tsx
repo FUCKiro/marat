@@ -11,6 +11,7 @@ export default function InvoicesList() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [showPDFGenerator, setShowPDFGenerator] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [sendingEmail, setSendingEmail] = useState<string | null>(null);
@@ -249,8 +250,55 @@ export default function InvoicesList() {
                 <option value="closed">Chiusa</option>
               </select>
             </div>
+
+            {/* Normalize VAT to 0 */}
+            <button
+              onClick={async () => {
+                if (!db) {
+                  setError('Database non configurato');
+                  return;
+                }
+                try {
+                  setSuccess('');
+                  setError('');
+                  setLoading(true);
+                  const invoicesRef = collection(db, 'invoices');
+                  const snapshot = await getDocs(invoicesRef);
+                  let updated = 0;
+                  await Promise.all(
+                    snapshot.docs.map(async (d) => {
+                      const data: any = d.data();
+                      const total = typeof data.total === 'number' ? data.total : 0;
+                      if (!db) return;
+                      await updateDoc(doc(db, 'invoices', d.id), {
+                        tax: 0,
+                        subtotal: total,
+                      });
+                      updated++;
+                    })
+                  );
+                  setSuccess(`Normalizzate ${updated} fatture: IVA impostata a 0 e subtotale allineato al totale.`);
+                  await fetchInvoices();
+                } catch (err) {
+                  console.error('Errore nella normalizzazione IVA:', err);
+                  setError('Errore nella normalizzazione IVA');
+                } finally {
+                  setLoading(false);
+                }
+              }}
+              className="px-4 py-2 text-sm bg-teal-600 text-white rounded-md hover:bg-teal-700 transition-colors"
+              title="Imposta IVA a 0 e subtotale = totale su tutte le fatture"
+            >
+              Normalizza IVA a 0
+            </button>
           </div>
         </div>
+
+        {success && (
+          <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md">
+            {success}
+          </div>
+        )}
 
         {filteredInvoices.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
@@ -270,32 +318,32 @@ export default function InvoicesList() {
         ) : (
           <>
             {/* Desktop Table View */}
-            <div className="hidden lg:block overflow-x-auto">
-              <table className="min-w-full bg-white">
+            <div className="hidden lg:block">
+              <table className="w-full table-fixed bg-white">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-36">
                       Numero Fattura
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
                       Paziente
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-28">
                       Data
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-28">
                       Scadenza
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
                       Importo
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
                       Stato
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-48">
                       Email
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-36">
                       Azioni
                     </th>
                   </tr>
@@ -303,43 +351,43 @@ export default function InvoicesList() {
                 <tbody className="divide-y divide-gray-200">
                   {filteredInvoices.map((invoice) => (
                     <tr key={invoice.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <td className="px-4 py-4 text-sm font-medium text-gray-900 break-words">
                         {invoice.invoiceNumber}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-4 py-4 text-sm text-gray-900 break-words">
                         <div className="flex items-center gap-2">
                           <User className="w-4 h-4 text-gray-400" />
                           {invoice.patientName}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-4 py-4 text-sm text-gray-900">
                         <div className="flex items-center gap-2">
                           <Calendar className="w-4 h-4 text-gray-400" />
                           {formatDate(invoice.createdAt)}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-4 py-4 text-sm text-gray-900">
                         {formatDate(invoice.dueDate)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-right">
+                      <td className="px-4 py-4 text-sm font-medium text-gray-900 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <Euro className="w-4 h-4 text-gray-400" />
                           {formatCurrency(invoice.total)}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-4 py-4">
                         <div className="flex items-center gap-2">
                           {getStatusIcon(invoice.status)}
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(invoice.status)}`}>
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(invoice.status)}`}> 
                             {getStatusText(invoice.status)}
                           </span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-500">
+                      <td className="px-4 py-4 text-xs text-gray-500 break-words max-w-xs">
                         {getEmailStatusText(invoice)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <div className="flex items-center gap-2">
+                      <td className="px-4 py-4 text-sm text-gray-500">
+                        <div className="flex flex-wrap items-center gap-2">
                            <button
                              onClick={() => {
                                setSelectedInvoice(invoice);

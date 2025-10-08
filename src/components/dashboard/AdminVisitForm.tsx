@@ -33,7 +33,8 @@ export default function AdminVisitForm({
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
-    const value = e.target.type === 'number' ? parseInt(e.target.value) : e.target.value;
+    const raw = e.target.value;
+    const value = e.target.name === 'duration' || e.target.type === 'number' ? parseInt(raw) : raw;
     setFormData(prev => ({
       ...prev,
       [e.target.name]: value
@@ -129,18 +130,19 @@ export default function AdminVisitForm({
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700">
-            Durata (minuti)
+            Durata
           </label>
-          <input
-            type="number"
+          <select
             name="duration"
             required
-            min="15"
-            step="15"
             value={formData.duration}
             onChange={handleChange}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"
-          />
+          >
+            <option value={60}>1 ora (60 minuti)</option>
+            <option value={90}>1 ora e mezza (90 minuti)</option>
+            <option value={120}>2 ore (120 minuti)</option>
+          </select>
         </div>
         <div className="flex space-x-4">
           <button

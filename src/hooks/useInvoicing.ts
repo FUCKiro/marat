@@ -167,7 +167,7 @@ export function useInvoicing() {
       
       if (!existingInvoiceSnapshot.empty) {
         console.log(`Invoice already exists for patient ${patientTotal.patientName} for ${month}/${year}`);
-        setError(`Fattura già esistente per ${patientTotal.patientName} per il periodo ${month}/${year}`);
+        setError(`Proforma già esistente per ${patientTotal.patientName} per il periodo ${month}/${year}`);
         return null;
       }
       
@@ -185,9 +185,9 @@ export function useInvoicing() {
           province: 'N/A'
         } as BillingInfo,
         items: patientTotal.items,
-        subtotal: patientTotal.totalAmount / 1.22, // Scorporo IVA dal totale IVA inclusa
-        tax: patientTotal.totalAmount - (patientTotal.totalAmount / 1.22), // IVA scorporata
-        total: patientTotal.totalAmount, // Il totale è già IVA inclusa
+        subtotal: patientTotal.totalAmount, // Esente IVA: il subtotale coincide con il totale
+        tax: 0, // Esente IVA: nessuna imposta
+        total: patientTotal.totalAmount,
         month: month,
         year: year,
         status: 'proforma',
@@ -209,7 +209,7 @@ export function useInvoicing() {
     } catch (err: any) {
       console.error('Error generating invoice:', err);
       console.error('Error details:', err.message, err.code);
-      setError(`Errore nella generazione della fattura: ${err.message}`);
+      setError(`Errore nella generazione della proforma: ${err.message}`);
       return null;
     }
   };
@@ -236,13 +236,13 @@ export function useInvoicing() {
       }
 
       if (invoices.length > 0) {
-        setSuccess(`Generate ${invoices.length} fatture con successo`);
+        setSuccess(`Generate ${invoices.length} proforma con successo`);
       }
       
       if (skippedPatients.length > 0) {
-        const skippedMessage = `Fatture già esistenti saltate per: ${skippedPatients.join(', ')}`;
+        const skippedMessage = `Proforma già esistenti saltate per: ${skippedPatients.join(', ')}`;
         if (invoices.length > 0) {
-          setSuccess(`Generate ${invoices.length} fatture con successo. ${skippedMessage}`);
+          setSuccess(`Generate ${invoices.length} proforma con successo. ${skippedMessage}`);
         } else {
           setError(skippedMessage);
         }
@@ -252,7 +252,7 @@ export function useInvoicing() {
 
     } catch (err: any) {
       console.error('Error generating all invoices:', err);
-      setError('Errore nella generazione delle fatture');
+      setError('Errore nella generazione delle proforma');
       return [];
     } finally {
       setLoading(false);
@@ -275,12 +275,12 @@ export function useInvoicing() {
         paidAt: new Date()
       });
 
-      setSuccess('Fattura convertita in fattura finale e marcata come pagata');
+      setSuccess('Proforma convertita in fattura finale e marcata come pagata');
       return true;
 
     } catch (err: any) {
       console.error('Error converting invoice to final:', err);
-      setError('Errore nella conversione della fattura');
+      setError('Errore nella conversione della proforma');
       return false;
     } finally {
       setLoading(false);

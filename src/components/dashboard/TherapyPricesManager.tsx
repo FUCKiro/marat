@@ -267,7 +267,7 @@ export default function TherapyPricesManager() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700">
-                          Prezzo per Ora (€ IVA inclusa)
+                          Prezzo per Ora (€)
                         </label>
                         <input
                           type="number"
@@ -316,7 +316,7 @@ export default function TherapyPricesManager() {
                         {price.type}
                       </div>
                       <div className="text-lg font-semibold text-gray-900">
-                        €{price.pricePerHour.toFixed(2)}/ora (IVA inclusa)
+                        €{price.pricePerHour.toFixed(2)}/ora
                       </div>
                       {price.notes && (
                         <div className="text-sm text-gray-500 mt-1">

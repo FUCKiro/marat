@@ -107,7 +107,7 @@ export default function MonthlyInvoicing() {
               className="flex items-center justify-center gap-2 bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <FileText className="w-4 h-4" />
-              {loading ? 'Generando...' : 'Genera Fatture'}
+              {loading ? 'Generando...' : 'Genera Proforma'}
             </button>
           )}
         </div>
