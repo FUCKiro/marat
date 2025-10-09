@@ -99,7 +99,7 @@ ${invoice.patientName}`;
   const getServicesDetails = () => {
     let servicesTable = `DETTAGLIO SERVIZI:
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ Descrizione                    │ ore/incontri │ Prezzo/Ora │      Totale      │
+│ Descrizione                    │ ore/incontri │ Sessione   │      Totale      │
 ├─────────────────────────────────────────────────────────────────────────────┤`;
 
     invoice.items.forEach(item => {

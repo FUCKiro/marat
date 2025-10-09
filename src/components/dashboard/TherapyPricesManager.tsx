@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, Timestamp } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, deleteDoc, doc, Timestamp, onSnapshot } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { TherapyPrice } from '../../types';
 import { Euro, Plus, Edit, Trash2, Save, X } from 'lucide-react';
@@ -13,6 +13,7 @@ export default function TherapyPricesManager() {
   const [success, setSuccess] = useState('');
   const [editingPrice, setEditingPrice] = useState<TherapyPrice | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const therapyTypes = [
     'Psicoterapia',
@@ -24,32 +25,38 @@ export default function TherapyPricesManager() {
     'GLO'
   ];
 
-  const fetchTherapyPrices = async () => {
-    if (!db) return;
-    
-    try {
-      const querySnapshot = await getDocs(collection(db, 'therapyPrices'));
-      const pricesData: TherapyPrice[] = [];
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        pricesData.push({ 
-          id: doc.id, 
-          ...data,
-          createdAt: data.createdAt ? (data.createdAt as Timestamp).toDate() : new Date(),
-          updatedAt: data.updatedAt ? (data.updatedAt as Timestamp).toDate() : undefined
-        } as TherapyPrice);
-      });
-      setPrices(pricesData);
-    } catch (error) {
-      console.error('Errore nel caricamento dei prezzi:', error);
-      setError('Errore nel caricamento dei prezzi');
-    } finally {
-      setLoading(false);
-    }
-  };
+
 
   useEffect(() => {
-    fetchTherapyPrices();
+    if (!db) {
+      setLoading(false);
+      return;
+    }
+
+    const unsubscribe = onSnapshot(
+      collection(db, 'therapyPrices'),
+      (snapshot) => {
+        const pricesData: TherapyPrice[] = [];
+        snapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          pricesData.push({
+            id: docSnap.id,
+            ...data,
+            createdAt: data.createdAt ? (data.createdAt as Timestamp).toDate() : new Date(),
+            updatedAt: data.updatedAt ? (data.updatedAt as Timestamp).toDate() : undefined
+          } as TherapyPrice);
+        });
+        setPrices(pricesData);
+        setLoading(false);
+      },
+      (error) => {
+        console.error('Errore nel caricamento dei prezzi (realtime):', error);
+        setError('Errore nel caricamento dei prezzi');
+        setLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
   }, []);
 
   const handleAddPrice = async (e: React.FormEvent) => {
@@ -84,7 +91,6 @@ export default function TherapyPricesManager() {
       await addDoc(collection(db, 'therapyPrices'), priceData);
       setSuccess('Prezzo aggiunto con successo');
       setShowAddForm(false);
-      await fetchTherapyPrices();
       (e.target as HTMLFormElement).reset();
     } catch (err: any) {
       setError(err.message);
@@ -112,7 +118,6 @@ export default function TherapyPricesManager() {
       await updateDoc(doc(db, 'therapyPrices', editingPrice.id), updateData);
       setSuccess('Prezzo aggiornato con successo');
       setEditingPrice(null);
-      await fetchTherapyPrices();
     } catch (err: any) {
       console.error('Errore nel salvataggio del prezzo:', err);
       console.log('Utente corrente:', currentUser);
@@ -122,15 +127,22 @@ export default function TherapyPricesManager() {
     }
   };
 
-  const handleDeletePrice = async (priceId: string) => {
-    if (!confirm('Sei sicuro di voler eliminare questo prezzo?') || !db) return;
+  const handleDeletePrice = (priceId: string) => {
+    // Mostra conferma custom invece di window.confirm per evitare cancellazioni immediate
+    setConfirmDeleteId(priceId);
+  };
 
+  const confirmDeletePrice = async () => {
+    if (!confirmDeleteId || !db) return;
+    setError('');
+    setSuccess('');
     try {
-      await deleteDoc(doc(db, 'therapyPrices', priceId));
+      await deleteDoc(doc(db, 'therapyPrices', confirmDeleteId));
       setSuccess('Prezzo eliminato con successo');
-      await fetchTherapyPrices();
     } catch (err: any) {
       setError('Errore nell\'eliminazione del prezzo');
+    } finally {
+      setConfirmDeleteId(null);
     }
   };
 
@@ -165,7 +177,7 @@ export default function TherapyPricesManager() {
             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
           >
             <Plus className="h-4 w-4 mr-2" />
-            {showAddForm ? 'Annulla' : 'Aggiungi Prezzo'}
+            {showAddForm ? 'Annulla' : 'Aggiungi Sessione'}
           </button>
         </div>
 
@@ -206,7 +218,7 @@ export default function TherapyPricesManager() {
               </div>
               <div>
                 <label htmlFor="pricePerHour" className="block text-sm font-medium text-gray-700">
-                  Prezzo per Ora (€ IVA inclusa)
+                  Sessione (€ IVA inclusa)
                 </label>
                 <input
                   type="number"
@@ -244,7 +256,7 @@ export default function TherapyPricesManager() {
                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700"
               >
                 <Save className="h-4 w-4 mr-2" />
-                Salva Prezzo
+                Salva Sessione
               </button>
             </div>
           </form>
@@ -255,8 +267,8 @@ export default function TherapyPricesManager() {
         {prices.length === 0 ? (
           <div className="px-4 py-8 text-center text-gray-500">
             <Euro className="h-12 w-12 mx-auto text-gray-300 mb-4" />
-            <p>Nessun prezzo configurato</p>
-            <p className="text-sm">Aggiungi i prezzi per le diverse tipologie di terapia</p>
+            <p>Nessuna sessione configurata</p>
+            <p className="text-sm">Aggiungi i prezzi delle sessioni per le diverse tipologie di terapia</p>
           </div>
         ) : (
           <ul className="divide-y divide-gray-200">
@@ -267,7 +279,7 @@ export default function TherapyPricesManager() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700">
-                          Prezzo per Ora (€)
+                          Sessione (€)
                         </label>
                         <input
                           type="number"
@@ -316,7 +328,7 @@ export default function TherapyPricesManager() {
                         {price.type}
                       </div>
                       <div className="text-lg font-semibold text-gray-900">
-                        €{price.pricePerHour.toFixed(2)}/ora
+                        €{price.pricePerHour.toFixed(2)}/sessione
                       </div>
                       {price.notes && (
                         <div className="text-sm text-gray-500 mt-1">
@@ -351,6 +363,34 @@ export default function TherapyPricesManager() {
           </ul>
         )}
       </div>
+
+      {/* Confirm Delete Modal */}
+      {confirmDeleteId && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-md w-full">
+            <div className="p-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold">Conferma eliminazione</h3>
+            </div>
+            <div className="p-4">
+              <p className="text-gray-700">Sei sicuro di voler eliminare questa sessione?</p>
+            </div>
+            <div className="p-4 border-t border-gray-200 flex justify-end gap-2">
+              <button
+                onClick={() => setConfirmDeleteId(null)}
+                className="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-100"
+              >
+                Annulla
+              </button>
+              <button
+                onClick={confirmDeletePrice}
+                className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700"
+              >
+                Elimina
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

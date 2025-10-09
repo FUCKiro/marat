@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../config/firebase';
-import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, Timestamp, onSnapshot } from 'firebase/firestore';
 import { Visit, User } from '../types';
 
 export function useVisits() {
@@ -68,8 +68,91 @@ export function useVisits() {
   };
 
   useEffect(() => {
-    fetchVisits();
+    if (!currentUser) return;
+
+    // Listen to visits in real-time based on user role
+    const visitsRef = collection(db!, 'visits');
+    let visitsQuery = query(visitsRef);
+    if (currentUser.role === 'operator') {
+      visitsQuery = query(visitsRef, where('operatorId', '==', currentUser.id));
+    } else if (currentUser.role === 'patient') {
+      visitsQuery = query(visitsRef, where('patientId', '==', currentUser.id));
+    }
+
+    const unsubscribeVisits = onSnapshot(
+      visitsQuery,
+      (snapshot) => {
+        const visitsData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          date: (doc.data().date as Timestamp).toDate(),
+          createdAt: (doc.data().createdAt as Timestamp).toDate()
+        })) as Visit[];
+
+        const sortedVisits = visitsData.sort((a, b) => {
+          const dateCompare = b.date.getTime() - a.date.getTime();
+          if (dateCompare !== 0) return dateCompare;
+          const patientA = (patientsMap[a.patientId]?.name || '').toLowerCase();
+          const patientB = (patientsMap[b.patientId]?.name || '').toLowerCase();
+          return patientA.localeCompare(patientB);
+        });
+        setVisits(sortedVisits);
+      },
+      (error) => {
+        console.error('Error listening to visits:', error);
+      }
+    );
+
+    // Listen to all users map in real-time
+    const unsubscribeUsers = onSnapshot(
+      collection(db!, 'users'),
+      (snapshot) => {
+        const usersData = snapshot.docs.reduce((acc, doc) => ({
+          ...acc,
+          [doc.id]: { id: doc.id, ...doc.data() } as User,
+        }), {} as Record<string, User>);
+        setUsersMap(usersData);
+      },
+      (error) => {
+        console.error('Error listening to users:', error);
+      }
+    );
+
+    // Listen to patients map in real-time
+    const unsubscribePatients = onSnapshot(
+      query(collection(db!, 'users'), where('role', '==', 'patient')),
+      (snapshot) => {
+        const patientsData = snapshot.docs.reduce((acc, doc) => ({
+          ...acc,
+          [doc.id]: { id: doc.id, ...doc.data() } as User,
+        }), {} as Record<string, User>);
+        setPatientsMap(patientsData);
+      },
+      (error) => {
+        console.error('Error listening to patients:', error);
+      }
+    );
+
+    return () => {
+      unsubscribeVisits();
+      unsubscribeUsers();
+      unsubscribePatients();
+    };
   }, [currentUser]);
+
+  // Re-sort visits when patients map updates to ensure consistent ordering by patient name
+  useEffect(() => {
+    setVisits(prev => {
+      const sorted = [...prev].sort((a, b) => {
+        const dateCompare = b.date.getTime() - a.date.getTime();
+        if (dateCompare !== 0) return dateCompare;
+        const patientA = (patientsMap[a.patientId]?.name || '').toLowerCase();
+        const patientB = (patientsMap[b.patientId]?.name || '').toLowerCase();
+        return patientA.localeCompare(patientB);
+      });
+      return sorted;
+    });
+  }, [patientsMap]);
 
   return { visits, usersMap, patientsMap, fetchVisits };
 }

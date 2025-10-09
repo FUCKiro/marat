@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { collection, query, orderBy, getDocs, updateDoc, doc, Timestamp } from 'firebase/firestore';
+import { collection, query, orderBy, getDocs, updateDoc, doc, Timestamp, onSnapshot } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { Invoice } from '../../types';
 import InvoicePDFGenerator from './InvoicePDFGenerator';
@@ -280,7 +280,7 @@ export default function InvoicesList() {
                   <tr style="background: #f9fafb;">
                     <th style="padding: 8px; text-align: left; border-bottom: 1px solid #e5e7eb; font-size: 9px; font-weight: 500; color: #6b7280; text-transform: uppercase;">Descrizione</th>
                     <th style="padding: 8px; text-align: center; border-bottom: 1px solid #e5e7eb; font-size: 9px; font-weight: 500; color: #6b7280; text-transform: uppercase;">ore/incontri</th>
-                    <th style="padding: 8px; text-align: right; border-bottom: 1px solid #e5e7eb; font-size: 9px; font-weight: 500; color: #6b7280; text-transform: uppercase;">Prezzo/Ora</th>
+                    <th style="padding: 8px; text-align: right; border-bottom: 1px solid #e5e7eb; font-size: 9px; font-weight: 500; color: #6b7280; text-transform: uppercase;">Sessione</th>
                     <th style="padding: 8px; text-align: right; border-bottom: 1px solid #e5e7eb; font-size: 9px; font-weight: 500; color: #6b7280; text-transform: uppercase;">Totale</th>
                   </tr>
                 </thead>
@@ -457,7 +457,37 @@ export default function InvoicesList() {
   };
 
   useEffect(() => {
-    fetchInvoices();
+    if (!db) {
+      setLoading(false);
+      return;
+    }
+
+    const invoicesRef = collection(db, 'invoices');
+    const q = query(invoicesRef, orderBy('createdAt', 'desc'));
+
+    const unsubscribe = onSnapshot(
+      q,
+      (querySnapshot) => {
+        const invoicesData = querySnapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            ...data,
+            createdAt: (data.createdAt as Timestamp).toDate(),
+            dueDate: (data.dueDate as Timestamp).toDate()
+          } as Invoice;
+        });
+        setInvoices(invoicesData);
+        setLoading(false);
+      },
+      (err) => {
+        console.error('Errore nel caricamento delle fatture (realtime):', err);
+        setError('Errore nel caricamento delle fatture');
+        setLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
   }, []);
 
   // Filter invoices based on search term and status

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../config/firebase';
-import { collection, query, where, getDocs, Timestamp, setDoc, doc, addDoc, deleteDoc, updateDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, Timestamp, setDoc, doc, addDoc, deleteDoc, updateDoc, onSnapshot } from 'firebase/firestore';
 import { utils, writeFile } from 'xlsx';
 import { User, Visit } from '../types';
 import { useVisits } from './useVisits';
@@ -25,16 +25,79 @@ export function useDashboard() {
   const [editingUser, setEditingUser] = useState<User | null>(null);
 
   useEffect(() => {
-    async function loadData() {
-      if (currentUser?.role === 'admin') {
-        await fetchUsers();
-      } else if (currentUser?.role === 'operator') {
-        await fetchPatients();
-      }
+    if (!db) {
       setLoading(false);
+      return;
     }
-    
-    loadData();
+
+    let unsubscribeUsers: (() => void) | undefined;
+    let unsubscribePatients: (() => void) | undefined;
+
+    if (currentUser?.role === 'admin') {
+      // Listen to all users
+      unsubscribeUsers = onSnapshot(
+        collection(db!, 'users'),
+        (snapshot) => {
+          const usersData = snapshot.docs
+            .map(doc => ({
+              id: doc.id,
+              ...doc.data(),
+              createdAt: (doc.data().createdAt as Timestamp).toDate()
+            }))
+            .sort((a, b) => ((a as User).name || '').localeCompare(((b as User).name || '')));
+          setUsers(usersData as User[]);
+        },
+        (error) => {
+          console.error('Errore nel caricamento utenti (realtime):', error);
+          setError('Errore nel caricamento utenti');
+        }
+      );
+
+      // Listen to patients
+      unsubscribePatients = onSnapshot(
+        query(collection(db!, 'users'), where('role', '==', 'patient')),
+        (snapshot) => {
+          const patientsData = snapshot.docs
+            .map(doc => ({
+              id: doc.id,
+              ...doc.data(),
+              createdAt: (doc.data().createdAt as Timestamp).toDate()
+            }))
+            .sort((a, b) => ((a as User).name || '').localeCompare(((b as User).name || '')));
+          setPatients(patientsData as User[]);
+        },
+        (error) => {
+          console.error('Errore nel caricamento pazienti (realtime):', error);
+          setError('Errore nel caricamento pazienti');
+        }
+      );
+    } else if (currentUser?.role === 'operator') {
+      // Operators only need patients
+      unsubscribePatients = onSnapshot(
+        query(collection(db!, 'users'), where('role', '==', 'patient')),
+        (snapshot) => {
+          const patientsData = snapshot.docs
+            .map(doc => ({
+              id: doc.id,
+              ...doc.data(),
+              createdAt: (doc.data().createdAt as Timestamp).toDate()
+            }))
+            .sort((a, b) => ((a as User).name || '').localeCompare(((b as User).name || '')));
+          setPatients(patientsData as User[]);
+        },
+        (error) => {
+          console.error('Errore nel caricamento pazienti (realtime):', error);
+          setError('Errore nel caricamento pazienti');
+        }
+      );
+    }
+
+    setLoading(false);
+
+    return () => {
+      unsubscribeUsers?.();
+      unsubscribePatients?.();
+    };
   }, [currentUser]);
 
   async function fetchUsers() {
@@ -421,10 +484,6 @@ export function useDashboard() {
   };
 
   const handleDeleteVisit = async (visitId: string) => {
-    if (!window.confirm('Sei sicuro di voler eliminare questa visita?')) {
-      return;
-    }
-
     if (!db) {
       console.error('Database not initialized');
       setError('Database non inizializzato');

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useVisits } from '../../hooks/useVisits';
 import { Visit } from '../../types';
 
@@ -13,6 +13,7 @@ interface Props {
 
 export default function VisitsList({ isAdmin, exporting, onExport, onEdit, onDelete, deletingVisit }: Props) {
   const { visits, usersMap, patientsMap } = useVisits();
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const handleEdit = (visit: Visit) => {
     if (onEdit) {
       onEdit(visit);
@@ -20,10 +21,17 @@ export default function VisitsList({ isAdmin, exporting, onExport, onEdit, onDel
   };
 
   const handleDelete = (visitId: string) => {
-    if (onDelete) {
-      onDelete(visitId);
-    }
+    setConfirmDeleteId(visitId);
   };
+
+  const confirmDelete = () => {
+    if (confirmDeleteId && onDelete) {
+      onDelete(confirmDeleteId);
+    }
+    setConfirmDeleteId(null);
+  };
+
+  const cancelDelete = () => setConfirmDeleteId(null);
 
   const today = new Date();
   const currentMonth = today.getMonth();
@@ -194,6 +202,29 @@ export default function VisitsList({ isAdmin, exporting, onExport, onEdit, onDel
           </div>
         )}
       </div>
+      {isAdmin && confirmDeleteId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Conferma eliminazione</h3>
+            <p className="text-sm text-gray-600 mb-4">Sei sicuro di voler eliminare questa visita?</p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={cancelDelete}
+                className="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
+              >
+                Annulla
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={deletingVisit === confirmDeleteId}
+                className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+              >
+                Conferma
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

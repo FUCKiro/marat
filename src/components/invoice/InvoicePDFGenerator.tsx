@@ -228,7 +228,7 @@ export default function InvoicePDFGenerator({ invoice, onPDFGenerated }: Props) 
                     ore/incontri
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Prezzo/Ora (esente IVA)
+                    Sessione (esente IVA)
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Totale
