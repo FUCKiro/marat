@@ -96,6 +96,9 @@ export interface Invoice {
   subtotal: number;
   tax: number;
   total: number;
+  // Price adjustment: discount (negative) or surcharge (positive)
+  adjustmentAmount?: number;
+  adjustmentReason?: string;
   status: 'proforma' | 'final' | 'sent' | 'paid' | 'overdue' | 'closed';
   createdAt: Date;
   sentAt?: Date;

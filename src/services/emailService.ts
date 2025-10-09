@@ -262,43 +262,91 @@ export const sendInvoiceEmail = async (
       invoice.patientName;
 
     const subject = getEmailSubject(invoice);
-    // const htmlMessage = getEmailMessage(invoice); // unused
+    const isProforma = invoice.status === 'proforma';
+    const isPaid = invoice.status === 'paid';
 
-    // Prepare email data for Resend
-    const emailData: ResendEmailData = {
-      to: patientEmail,
-      subject,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #2563eb;">Associazione Maratonda</h2>
-          <p>Gentile ${recipientName},</p>
-          <p>In allegato trova la fattura richiesta.</p>
-          <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3>Dettagli Fattura:</h3>
-            <p><strong>Numero:</strong> ${invoice.invoiceNumber}</p>
-            <p><strong>Data:</strong> ${formatDate(invoice.createdAt)}</p>
-            <p><strong>Scadenza:</strong> ${formatDate(invoice.dueDate)}</p>
-            <p><strong>Importo:</strong> ${formatCurrency(invoice.total)}</p>
-            <p><strong>Paziente:</strong> ${invoice.patientName}</p>
-          </div>
-          <p>Cordiali saluti,<br>Associazione Maratonda</p>
+    const proformaNoticeHTML = `
+      <div style="background-color:#fff7ed;border:1px solid #fdba74;color:#9a3412;padding:12px;border-radius:6px;margin:16px 0;">
+        <strong>Attenzione:</strong> questo è un documento <strong>Proforma</strong> e <strong>non ha valore fiscale</strong>. Sarà convertito in fattura finale al momento del pagamento.
+      </div>
+    `;
+
+    const finalNoticeHTML = `
+      <div style="background-color:#ecfdf5;border:1px solid #6ee7b7;color:#065f46;padding:12px;border-radius:6px;margin:16px 0;">
+        <strong>Fattura finale:</strong> questo documento ha <strong>valore fiscale</strong> ed è valido ai sensi di legge.
+      </div>
+    `;
+
+    const paymentHTML = isPaid
+      ? `<p style="margin:12px 0;color:#065f46;"><strong>Pagamento ricevuto</strong> — grazie per aver effettuato il pagamento.</p>`
+      : `
+        <div style="background-color:#f8fafc;border:1px solid #e5e7eb;padding:12px;border-radius:6px;margin:16px 0;">
+          <h3 style="margin:0 0 8px 0;">Modalità di pagamento</h3>
+          <p style="margin:4px 0;">Bonifico Bancario</p>
+          <p style="margin:4px 0;">Banca: Banca di credito cooperativo di Roma-BCC</p>
+          <p style="margin:4px 0;">IBAN: <strong>IT 29 D 08327 03200 000000046622</strong></p>
+          <p style="margin:4px 0;">Intestato a: MARATONDA SOCIETA’ COOPERATIVA SOCIALE</p>
+          <p style="margin:4px 0;">Causale: ${isProforma ? `Fattura Proforma n. ${invoice.invoiceNumber}` : `Fattura n. ${invoice.invoiceNumber}`}</p>
+          ${isProforma ? `<p style="margin:8px 0 0 0;color:#374151;">Al ricevimento del pagamento, invieremo automaticamente la fattura finale.</p>` : ''}
         </div>
-      `,
-      text: `
-Gentile ${recipientName},
+      `;
 
-In allegato trova la fattura richiesta.
+    const taxNoteHTML = invoice.tax === 0
+      ? `<p style="margin:12px 0;color:#374151;">Operazione esente IVA ai sensi dell’art. 10 DPR 633/72.</p>`
+      : '';
 
-Dettagli Fattura:
+    const htmlBody = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #2563eb;">Associazione Maratonda</h2>
+        <p>Gentile ${recipientName},</p>
+        <p>In allegato trova ${isProforma ? 'la fattura <strong>Proforma</strong>' : 'la <strong>Fattura finale</strong>'} n. ${invoice.invoiceNumber} relativa ai servizi di terapia${invoice.billingInfo?.parentName ? ` del paziente ${invoice.patientName}` : ''}.</p>
+        ${isProforma ? proformaNoticeHTML : finalNoticeHTML}
+        <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="margin-top:0;">Dettagli ${isProforma ? 'Proforma' : 'Fattura'}:</h3>
+          <p><strong>Numero:</strong> ${invoice.invoiceNumber}</p>
+          <p><strong>Data:</strong> ${formatDate(invoice.createdAt)}</p>
+          <p><strong>Scadenza:</strong> ${formatDate(invoice.dueDate)}</p>
+          <p><strong>Importo:</strong> ${formatCurrency(invoice.total)}</p>
+          <p><strong>Paziente:</strong> ${invoice.patientName}</p>
+        </div>
+        ${taxNoteHTML}
+        ${paymentHTML}
+        <p style="margin-top:16px;">Cordiali saluti,<br>Associazione Maratonda</p>
+      </div>
+    `;
+
+    const textBody = `Gentile ${recipientName},
+
+In allegato trova ${isProforma ? 'la fattura Proforma' : 'la Fattura finale'} n. ${invoice.invoiceNumber} relativa ai servizi di terapia${invoice.billingInfo?.parentName ? ` del paziente ${invoice.patientName}` : ''}.
+
+${isProforma ? 'ATTENZIONE: Questo è un documento Proforma e non ha valore fiscale. Sarà convertito in fattura finale al momento del pagamento.' : 'Questa fattura ha valore fiscale ed è valida ai sensi di legge.'}
+
+Dettagli ${isProforma ? 'Proforma' : 'Fattura'}:
 - Numero: ${invoice.invoiceNumber}
 - Data: ${formatDate(invoice.createdAt)}
 - Scadenza: ${formatDate(invoice.dueDate)}
 - Importo: ${formatCurrency(invoice.total)}
 - Paziente: ${invoice.patientName}
 
+${invoice.tax === 0 ? 'Nota fiscale: Operazione esente IVA ai sensi dell’art. 10 DPR 633/72.' : ''}
+
+${isPaid ? 'Pagamento ricevuto — grazie per il pagamento.' : `Modalità di pagamento:
+Bonifico Bancario
+Banca: Banca di credito cooperativo di Roma-BCC
+IBAN: IT 29 D 08327 03200 000000046622
+Intestato a: MARATONDA SOCIETA’ COOPERATIVA SOCIALE
+Causale: ${isProforma ? `Fattura Proforma n. ${invoice.invoiceNumber}` : `Fattura n. ${invoice.invoiceNumber}`}
+${isProforma ? 'Alla ricezione del pagamento, invieremo automaticamente la fattura finale.' : ''}`}
+
 Cordiali saluti,
-Associazione Maratonda
-      `,
+Associazione Maratonda`;
+
+    // Prepare email data for Resend
+    const emailData: ResendEmailData = {
+      to: patientEmail,
+      subject,
+      html: htmlBody,
+      text: textBody,
       attachments: pdfBase64 ? [{
         filename: `Fattura_${invoice.invoiceNumber}.pdf`,
         content: pdfBase64,

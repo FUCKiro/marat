@@ -1,21 +1,17 @@
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import { Invoice } from '../../types';
-import { sendInvoiceEmail, validateEmailConfiguration } from '../../services/emailService';
-import { Download, CheckCircle, AlertCircle } from 'lucide-react';
+import { Download } from 'lucide-react';
 
 interface Props {
   invoice: Invoice;
   onPDFGenerated?: (pdfBlob: Blob) => void;
-  onEmailSent?: () => void;
 }
 
-export default function InvoicePDFGenerator({ invoice, onPDFGenerated, onEmailSent }: Props) {
+export default function InvoicePDFGenerator({ invoice, onPDFGenerated }: Props) {
   const invoiceRef = useRef<HTMLDivElement>(null);
-  const [emailSending, setEmailSending] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
-  const [emailError, setEmailError] = useState('');
+  // Email sending UI removed: keep only PDF generation and download
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('it-IT', {
@@ -58,77 +54,9 @@ export default function InvoicePDFGenerator({ invoice, onPDFGenerated, onEmailSe
     }
   };
 
-  const sendEmailWithInvoice = async () => {
-    setEmailSending(true);
-    setEmailError('');
+  // Email sending logic removed
 
-    try {
-      const billingEmail = invoice.billingInfo?.email;
-      if (!billingEmail) {
-        setEmailError('Email di fatturazione non disponibile.');
-        return;
-      }
-
-      // Generate PDF and get base64
-      if (!invoiceRef.current) {
-        setEmailError('Errore nella generazione del PDF.');
-        return;
-      }
-
-      // Capture the invoice as canvas
-      const canvas = await html2canvas(invoiceRef.current, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff'
-      });
-
-      // Create PDF
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      
-      const imgWidth = 210; // A4 width in mm
-      const pageHeight = 295; // A4 height in mm
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
-
-      let position = 0;
-
-      // Add first page
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-
-      // Add additional pages if needed
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-      }
-
-      // Get PDF as base64
-      const pdfBase64 = pdf.output('datauristring').split(',')[1]; // Remove data:application/pdf;base64, prefix
-      
-      // Send email with PDF attachment
-      const success = await sendInvoiceEmail(invoice, billingEmail, pdfBase64);
-      if (success) {
-        setEmailSent(true);
-        if (onEmailSent) {
-          onEmailSent();
-        }
-      } else {
-        setEmailError('Errore nell\'invio dell\'email. Riprova.');
-      }
-    } catch (error) {
-      console.error('Errore invio email:', error);
-      setEmailError('Errore nell\'invio dell\'email. Verifica la configurazione.');
-    } finally {
-      setEmailSending(false);
-    }
-  };
-
-  const isEmailConfigured = validateEmailConfiguration();
-  const canSendEmail = isEmailConfigured && invoice.billingInfo?.email && !emailSent;
+  // Email configuration checks removed
 
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat('it-IT').format(date);
@@ -140,14 +68,14 @@ export default function InvoicePDFGenerator({ invoice, onPDFGenerated, onEmailSe
     try {
       // Capture the invoice as canvas
       const canvas = await html2canvas(invoiceRef.current, {
-        scale: 2,
+        scale: 1.2,
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff'
       });
 
       // Create PDF
-      const imgData = canvas.toDataURL('image/png');
+      const imgData = canvas.toDataURL('image/jpeg', 0.85);
       const pdf = new jsPDF('p', 'mm', 'a4');
       
       const imgWidth = 210; // A4 width in mm
@@ -158,14 +86,14 @@ export default function InvoicePDFGenerator({ invoice, onPDFGenerated, onEmailSe
       let position = 0;
 
       // Add first page
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
       heightLeft -= pageHeight;
 
       // Add additional pages if needed
       while (heightLeft >= 0) {
         position = heightLeft - imgHeight;
         pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
         heightLeft -= pageHeight;
       }
 
@@ -203,47 +131,7 @@ export default function InvoicePDFGenerator({ invoice, onPDFGenerated, onEmailSe
           <Download className="w-4 h-4" />
           Scarica PDF
         </button>
-
-        {canSendEmail && (
-          <button
-            onClick={sendEmailWithInvoice}
-            disabled={emailSending}
-            className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            <CheckCircle className="w-4 h-4" />
-            {emailSending ? 'Invio...' : 'Invia Email'}
-          </button>
-        )}
-
-        {emailSent && (
-          <div className="flex items-center gap-2 text-green-600 bg-green-50 px-4 py-2 rounded-md">
-            <CheckCircle className="w-4 h-4" />
-            Email inviata
-          </div>
-        )}
       </div>
-
-      {/* Messages */}
-      {emailError && (
-        <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
-          <AlertCircle className="w-4 h-4" />
-          {emailError}
-        </div>
-      )}
-
-      {!isEmailConfigured && (
-        <div className="flex items-center gap-2 bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded-md">
-          <AlertCircle className="w-4 h-4" />
-          Configurazione email non completata. Contatta l'amministratore.
-        </div>
-      )}
-
-      {!invoice.billingInfo?.email && (
-        <div className="flex items-center gap-2 bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded-md">
-          <AlertCircle className="w-4 h-4" />
-          Email di fatturazione non disponibile.
-        </div>
-      )}
 
       {/* Invoice Preview */}
       <div 
@@ -381,6 +269,14 @@ export default function InvoicePDFGenerator({ invoice, onPDFGenerated, onEmailSe
                 <span className="text-gray-600">{invoice.tax === 0 ? 'IVA: Esente (0%)' : 'IVA (22%):'}</span>
                 <span className="font-medium">{formatCurrency(invoice.tax)}</span>
               </div>
+              {typeof invoice.adjustmentAmount === 'number' && invoice.adjustmentAmount !== 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">{invoice.adjustmentAmount < 0 ? 'Sconto:' : 'Adeguamento:'}</span>
+                  <span className={invoice.adjustmentAmount < 0 ? 'font-medium text-red-600' : 'font-medium text-teal-700'}>
+                    {formatCurrency(invoice.adjustmentAmount)}
+                  </span>
+                </div>
+              )}
               <div className="border-t border-gray-300 pt-2">
                 <div className="flex justify-between text-lg font-bold">
                   <span className="text-gray-800">Totale:</span>

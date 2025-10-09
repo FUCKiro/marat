@@ -84,12 +84,12 @@ export default function UsersList({ users, type, title, onDeleteUser, deletingUs
 
       switch (sortBy) {
         case 'name':
-          aValue = a.name.toLowerCase();
-          bValue = b.name.toLowerCase();
+          aValue = (a.name || '').trim().toLowerCase();
+          bValue = (b.name || '').trim().toLowerCase();
           break;
         case 'email':
-          aValue = (a.email || '').toLowerCase();
-          bValue = (b.email || '').toLowerCase();
+          aValue = (a.email || '').trim().toLowerCase();
+          bValue = (b.email || '').trim().toLowerCase();
           break;
         case 'createdAt':
           aValue = a.createdAt;

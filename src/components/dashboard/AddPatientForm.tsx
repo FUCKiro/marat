@@ -22,10 +22,29 @@ export default function AddPatientForm({ error, success, onSubmit }: Props) {
     medicalNotes: ''
   });
 
+  const toTitleCase = (s: string) =>
+    s
+      .trim()
+      .split(' ')
+      .filter(Boolean)
+      .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+      .join(' ');
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name } = e.target;
+    let value = e.target.value;
+
+    if (name === 'fiscalCode') {
+      value = value.toUpperCase();
+    } else if (name === 'address' || name === 'city') {
+      value = toTitleCase(value);
+    } else if (name === 'province') {
+      value = value.toUpperCase();
+    }
+
     setFormData(prev => ({
       ...prev,
-      [e.target.name]: e.target.value
+      [name]: value
     }));
   };
 

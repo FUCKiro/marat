@@ -188,6 +188,13 @@ export function useDashboard() {
 
     try {
       const formData = new FormData(e.target as HTMLFormElement);
+      const toTitleCase = (s: any) =>
+        String(s || '')
+          .trim()
+          .split(' ')
+          .filter(Boolean)
+          .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+          .join(' ');
       
       // Generate a unique ID for the patient (since we're not using Firebase Auth)
       const patientId = `patient_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -195,19 +202,19 @@ export function useDashboard() {
       // Save patient data directly to Firestore (no Firebase Auth account needed)
       await setDoc(doc(db!, 'users', patientId), {
         id: patientId,
-        name: formData.get('name'),
+        name: toTitleCase(formData.get('name')),
         role: 'patient',
-        parentName: formData.get('parentName'),
-        parentSurname: formData.get('parentSurname'),
+        parentName: toTitleCase(formData.get('parentName')),
+        parentSurname: toTitleCase(formData.get('parentSurname')),
         medicalNotes: formData.get('medicalNotes') || '',
         billingInfo: {
-          parentName: formData.get('parentName'),
-          parentSurname: formData.get('parentSurname'),
-          fiscalCode: formData.get('fiscalCode'),
-          address: formData.get('address'),
-          city: formData.get('city'),
+          parentName: toTitleCase(formData.get('parentName')),
+          parentSurname: toTitleCase(formData.get('parentSurname')),
+          fiscalCode: String(formData.get('fiscalCode') || '').toUpperCase(),
+          address: toTitleCase(formData.get('address')),
+          city: toTitleCase(formData.get('city')),
           postalCode: formData.get('postalCode'),
-          province: formData.get('province'),
+          province: String(formData.get('province') || '').toUpperCase(),
           phone: formData.get('phone'),
           email: formData.get('billingEmail'),
           vatNumber: formData.get('vatNumber') || ''

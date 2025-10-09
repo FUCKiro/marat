@@ -14,6 +14,11 @@ export default function InvoicesList() {
   const [success, setSuccess] = useState('');
   const [showPDFGenerator, setShowPDFGenerator] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [showAdjustModal, setShowAdjustModal] = useState(false);
+  const [adjustInvoice, setAdjustInvoice] = useState<Invoice | null>(null);
+  const [adjustAmount, setAdjustAmount] = useState<string>('0');
+  const [adjustReason, setAdjustReason] = useState<string>('');
+  const [updatingPrice, setUpdatingPrice] = useState<boolean>(false);
   const [sendingEmail, setSendingEmail] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -71,6 +76,49 @@ export default function InvoicesList() {
       style: 'currency',
       currency: 'EUR'
     }).format(amount);
+  };
+
+  const openAdjustModal = (invoice: Invoice) => {
+    setAdjustInvoice(invoice);
+    setAdjustAmount(String(invoice.adjustmentAmount ?? 0));
+    setAdjustReason(invoice.adjustmentReason ?? '');
+    setShowAdjustModal(true);
+  };
+
+  const computedNewTotal = () => {
+    if (!adjustInvoice) return 0;
+    const amt = parseFloat(adjustAmount || '0');
+    const newTotal = adjustInvoice.subtotal + adjustInvoice.tax + (isNaN(amt) ? 0 : amt);
+    return Math.round(newTotal * 100) / 100;
+  };
+
+  const updateInvoicePrice = async () => {
+    if (!db || !adjustInvoice) return;
+    setUpdatingPrice(true);
+    try {
+      const amt = parseFloat(adjustAmount || '0');
+      const newTotal = computedNewTotal();
+      const invoiceRef = doc(db, 'invoices', adjustInvoice.id);
+      await updateDoc(invoiceRef, {
+        adjustmentAmount: isNaN(amt) ? 0 : amt,
+        adjustmentReason: adjustReason || '',
+        total: newTotal
+      });
+
+      setInvoices(prev => prev.map(inv =>
+        inv.id === adjustInvoice.id
+          ? { ...inv, adjustmentAmount: isNaN(amt) ? 0 : amt, adjustmentReason: adjustReason || '', total: newTotal }
+          : inv
+      ));
+      setSuccess('Prezzo della fattura aggiornato con successo');
+      setShowAdjustModal(false);
+      setAdjustInvoice(null);
+    } catch (err: any) {
+      console.error('Error updating invoice price:', err);
+      setError('Errore nell\'aggiornamento del prezzo della fattura');
+    } finally {
+      setUpdatingPrice(false);
+    }
   };
 
   const formatDate = (date: Date) => {
@@ -265,6 +313,14 @@ export default function InvoicesList() {
                     <span style="color: #6b7280;">${invoice.tax === 0 ? 'IVA: Esente (0%)' : 'IVA (22%):'}</span>
                     <span style="font-weight: 500;">${new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(invoice.tax)}</span>
                   </div>
+                  ${invoice.adjustmentAmount && invoice.adjustmentAmount !== 0 ? `
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 11px;">
+                    <span style="color: #6b7280;">${invoice.adjustmentAmount < 0 ? 'Sconto:' : 'Adeguamento:'}</span>
+                    <span style="font-weight: 500; color: ${invoice.adjustmentAmount < 0 ? '#dc2626' : '#0f766e'};">
+                      ${new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(invoice.adjustmentAmount)}
+                    </span>
+                  </div>
+                  ` : ''}
                   <div style="border-top: 1px solid #d1d5db; padding-top: 6px; margin-top: 6px;">
                     <div style="display: flex; justify-content: space-between; font-size: 14px; font-weight: bold;">
                       <span style="color: #374151;">Totale:</span>
@@ -471,46 +527,7 @@ export default function InvoicesList() {
               </select>
             </div>
 
-            {/* Normalize VAT to 0 */}
-            <button
-              onClick={async () => {
-                if (!db) {
-                  setError('Database non configurato');
-                  return;
-                }
-                try {
-                  setSuccess('');
-                  setError('');
-                  setLoading(true);
-                  const invoicesRef = collection(db, 'invoices');
-                  const snapshot = await getDocs(invoicesRef);
-                  let updated = 0;
-                  await Promise.all(
-                    snapshot.docs.map(async (d) => {
-                      const data: any = d.data();
-                      const total = typeof data.total === 'number' ? data.total : 0;
-                      if (!db) return;
-                      await updateDoc(doc(db, 'invoices', d.id), {
-                        tax: 0,
-                        subtotal: total,
-                      });
-                      updated++;
-                    })
-                  );
-                  setSuccess(`Normalizzate ${updated} fatture: IVA impostata a 0 e subtotale allineato al totale.`);
-                  await fetchInvoices();
-                } catch (err) {
-                  console.error('Errore nella normalizzazione IVA:', err);
-                  setError('Errore nella normalizzazione IVA');
-                } finally {
-                  setLoading(false);
-                }
-              }}
-              className="px-4 py-2 text-sm bg-teal-600 text-white rounded-md hover:bg-teal-700 transition-colors"
-              title="Imposta IVA a 0 e subtotale = totale su tutte le fatture"
-            >
-              Normalizza IVA a 0
-            </button>
+            {/* Pulsante “Normalizza IVA 0” rimosso: tutte le fatture sono IVA 0% */}
           </div>
         </div>
 
@@ -609,15 +626,24 @@ export default function InvoicesList() {
                       <td className="px-4 py-4 text-sm text-gray-500">
                         <div className="flex flex-wrap items-center gap-2">
                            <button
-                             onClick={() => {
-                               setSelectedInvoice(invoice);
-                               setShowPDFGenerator(true);
-                             }}
-                             className="text-teal-600 hover:text-teal-800 transition-colors"
-                             title="Visualizza fattura"
-                           >
-                             <Eye className="w-4 h-4" />
-                           </button>
+                              onClick={() => {
+                                setSelectedInvoice(invoice);
+                                setShowPDFGenerator(true);
+                              }}
+                              className="text-teal-600 hover:text-teal-800 transition-colors"
+                              title="Visualizza fattura"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+
+                            {/* Edit Price (Desktop icon action) */}
+                            <button
+                              onClick={() => openAdjustModal(invoice)}
+                              className="text-yellow-600 hover:text-yellow-800 transition-colors"
+                              title="Modifica prezzo"
+                            >
+                              <Euro className="w-4 h-4" />
+                            </button>
                            
                            {canSendProformaEmail(invoice) && (
                               <button
@@ -737,8 +763,16 @@ export default function InvoicesList() {
                        }}
                        className="flex items-center gap-2 px-3 py-2 text-sm bg-teal-50 text-teal-700 rounded-md hover:bg-teal-100 transition-colors"
                      >
-                       <Eye className="w-4 h-4" />
+                      <Eye className="w-4 h-4" />
                        Visualizza
+                     </button>
+
+                     <button
+                       onClick={() => openAdjustModal(invoice)}
+                       className="flex items-center gap-2 px-3 py-2 text-sm bg-yellow-50 text-yellow-700 rounded-md hover:bg-yellow-100 transition-colors"
+                     >
+                       <Euro className="w-4 h-4" />
+                       Modifica Prezzo
                      </button>
                      
                      {canSendProformaEmail(invoice) && (
@@ -824,6 +858,89 @@ export default function InvoicesList() {
                 invoice={selectedInvoice}
                 onPDFGenerated={handlePDFGenerated}
               />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Adjust Price Modal */}
+      {showAdjustModal && adjustInvoice && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-lg w-full">
+            <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+              <h3 className="text-lg font-semibold">Modifica Prezzo Fattura {adjustInvoice.invoiceNumber}</h3>
+              <button
+                onClick={() => {
+                  setShowAdjustModal(false);
+                  setAdjustInvoice(null);
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-4 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Adeguamento (può essere negativo)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={adjustAmount}
+                  onChange={(e) => setAdjustAmount(e.target.value)}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"
+                  placeholder="Es. -10.00 sconto, 15.00 adeguamento"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Motivazione (opzionale)</label>
+                <input
+                  type="text"
+                  value={adjustReason}
+                  onChange={(e) => setAdjustReason(e.target.value)}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"
+                  placeholder="Es. Sconto familiare / Distanza chilometrica"
+                />
+              </div>
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Subtotale:</span>
+                  <span className="font-medium">{formatCurrency(adjustInvoice.subtotal)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">{adjustInvoice.tax === 0 ? 'IVA: Esente (0%)' : 'IVA (22%):'}</span>
+                  <span className="font-medium">{formatCurrency(adjustInvoice.tax)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">{(parseFloat(adjustAmount || '0')) < 0 ? 'Sconto:' : 'Maggiorazione:'}</span>
+                  <span className={(parseFloat(adjustAmount || '0')) < 0 ? 'font-medium text-red-600' : 'font-medium text-teal-700'}>
+                    {formatCurrency(parseFloat(adjustAmount || '0'))}
+                  </span>
+                </div>
+                <div className="border-t border-gray-300 pt-2 mt-2">
+                  <div className="flex justify-between text-lg font-bold">
+                    <span className="text-gray-800">Nuovo Totale:</span>
+                    <span className="text-teal-700">{formatCurrency(computedNewTotal())}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-2 justify-end">
+                <button
+                  onClick={() => {
+                    setShowAdjustModal(false);
+                    setAdjustInvoice(null);
+                  }}
+                  className="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-100"
+                >
+                  Annulla
+                </button>
+                <button
+                  onClick={updateInvoicePrice}
+                  disabled={updatingPrice}
+                  className="px-4 py-2 rounded-md bg-teal-600 text-white hover:bg-teal-700 disabled:opacity-50"
+                >
+                  {updatingPrice ? 'Salvataggio…' : 'Salva'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
