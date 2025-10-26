@@ -10,6 +10,7 @@ import ChiSiamo from './pages/ChiSiamo.tsx';
 import CosaFacciamo from './pages/CosaFacciamo.tsx';
 import Team from './pages/Team.tsx';
 import Contatti from './pages/Contatti.tsx';
+import Autismo from './pages/Autismo.tsx';
 import Privacy from './pages/Privacy.tsx';
 import Layout from './components/Layout.tsx';
 import './index.css';
@@ -34,6 +35,7 @@ const router = createBrowserRouter([
       { path: '/chi-siamo', element: <ChiSiamo /> },
       { path: '/cosa-facciamo', element: <CosaFacciamo /> },
       { path: '/team', element: <Team /> },
+  { path: '/autismo', element: <Autismo /> },
       { path: '/contatti', element: <Contatti /> },
       { path: '/privacy', element: <Privacy /> },
     ],

@@ -1,4 +1,3 @@
-import React from 'react';
 import PageBackground3D from '../components/PageBackground3D';
 import ScrollAnimation from '../components/ScrollAnimation';
 import SEO from '../components/SEO';
@@ -83,7 +82,7 @@ export default function Privacy() {
               <section>
                 <h3 className="text-xl font-semibold mb-3 text-gray-800">6. Contatti</h3>
                 <p>
-                  Per esercitare i propri diritti o per qualsiasi informazione relativa al trattamento dei dati personali, è possibile contattare il Titolare all'indirizzo email: privacy@maratonda.it
+                  Per esercitare i propri diritti o per qualsiasi informazione relativa al trattamento dei dati personali, è possibile contattare il Titolare all'indirizzo email: associazionemaratonda@gmail.com
                 </p>
               </section>
             </div>

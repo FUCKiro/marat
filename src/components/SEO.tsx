@@ -9,10 +9,10 @@ interface Props {
 }
 
 export default function SEO({
-  title = 'Maratonda - Valorizziamo la Neurodiversità',
-  description = 'Maratonda offre servizi specialistici per persone neurodiverse, con un approccio integrato che include ABA, psicoterapia, neuropsicomotricità e logopedia. Un ambiente accogliente per bambini, adolescenti e adulti.',
+  title = 'Associazione Maratonda - Studio di Psicologia a Roma',
+  description = 'Maratonda è uno studio di psicologia a Roma specializzato in autismo e neurodiversità. Offriamo valutazione, interventi ABA, psicoterapia e percorsi su misura per bambini, adolescenti e adulti.',
   image = 'https://res.cloudinary.com/dlc5g3cjb/image/upload/v1733848053/Maratonda_logo_tz9x92.png',
-  url = 'https://maratonda.it',
+  url = 'https://associazione-maratonda.it',
   type = 'website'
 }: Props) {
   const siteTitle = title.includes('Maratonda') ? title : `${title} | Maratonda`;
@@ -38,10 +38,15 @@ export default function SEO({
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={image} />
 
+  {/* Google Search Console verification */}
+  <meta name="google-site-verification" content="RWFKrU1Jn6q7rCkirNv5j0KWtSQcmq5ywoTZOXq7-yg" />
+
       {/* Additional Meta Tags */}
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <meta name="theme-color" content="#0D9488" />
       <meta name="keywords" content="neurodiversità, ABA, psicoterapia, neuropsicomotricità, logopedia, Roma, terapia, sviluppo, inclusione" />
+  {/* Improved keywords for local SEO */}
+  <meta name="keywords" content="studio psicologi Roma, psicologo autismo Roma, psicologi Roma, terapia autismo Roma, Maratonda" />
       <meta name="author" content="Maratonda" />
       <meta name="robots" content="index, follow" />
       <meta name="language" content="it" />
@@ -49,6 +54,34 @@ export default function SEO({
       {/* Favicon */}
       <link rel="icon" type="image/png" href="https://res.cloudinary.com/dlc5g3cjb/image/upload/v1733848053/Maratonda_logo_tz9x92.png" />
       <link rel="apple-touch-icon" type="image/png" href="https://res.cloudinary.com/dlc5g3cjb/image/upload/v1733848053/Maratonda_logo_tz9x92.png" />
+
+      {/* Structured Data (LocalBusiness) to help Google index as local psychologist studio */}
+      <script type="application/ld+json">{`{
+        "@context": "https://schema.org",
+        "@type": "LocalBusiness",
+        "name": "Maratonda",
+        "image": "${image}",
+        "@id": "${url}",
+        "url": "${url}",
+        "telephone": "+39 351 479 0620",
+        "email": "associazionemaratonda@gmail.com",
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "Largo Bacone, 16",
+          "addressLocality": "Roma",
+          "postalCode": "00137",
+          "addressCountry": "IT"
+        },
+        "description": "${description}",
+        "openingHours": ["Mo-Fr 09:00-18:00","Sa 09:00-13:00"],
+        "areaServed": {"@type": "City","name": "Roma"},
+        "service": [
+          {"@type": "Service", "name": "Valutazione e trattamento dell'autismo"},
+          {"@type": "Service", "name": "Interventi ABA"},
+          {"@type": "Service", "name": "Psicoterapia individuale e familiare"},
+          {"@type": "Service", "name": "Neuropsicomotricità e logopedia"}
+        ]
+      }`}</script>
     </Helmet>
   );
 }
