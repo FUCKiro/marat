@@ -8,7 +8,10 @@ import SEO from './components/SEO';
 function App() {
   return (
     <>
-      <SEO />
+      <SEO
+        title="Studio Psicologi a Roma — Maratonda | Autismo e Neurodiversità"
+        description="Maratonda è uno studio di psicologia a Roma specializzato in autismo e neurodiversità. Offriamo percorsi ABA, psicoterapia e supporto alle famiglie. Prenota una valutazione." 
+      />
       {/* Hero Section */}
       <section className="relative min-h-[90vh] text-white">
         <Hero3D />

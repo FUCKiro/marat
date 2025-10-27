@@ -80,6 +80,20 @@ export default function SEO({
           {"@type": "Service", "name": "Interventi ABA"},
           {"@type": "Service", "name": "Psicoterapia individuale e familiare"},
           {"@type": "Service", "name": "Neuropsicomotricità e logopedia"}
+        ],
+        "contactPoint": [
+          {
+            "@type": "ContactPoint",
+            "telephone": "+39 351 479 0620",
+            "contactType": "customer service",
+            "email": "associazionemaratonda@gmail.com",
+            "areaServed": "IT",
+            "availableLanguage": ["it"]
+          }
+        ],
+        "sameAs": [
+          "https://www.instagram.com/associazionemaratonda/?hl=it",
+          "https://www.facebook.com/AssociazioneMaratonda/?locale=it_IT"
         ]
       }`}</script>
     </Helmet>

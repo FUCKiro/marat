@@ -8,8 +8,8 @@ export default function ChiSiamo() {
   return (
     <>
       <SEO
-        title="Chi Siamo"
-        description="Maratonda è un'associazione dedicata al supporto delle persone neurodiverse, offrendo servizi specialistici e un ambiente accogliente per la crescita e lo sviluppo personale."
+        title="Chi Siamo — Maratonda (Studio Psicologi a Roma)"
+        description="Scopri Maratonda: uno studio di psicologia a Roma specializzato in neurodiversità e autismo. Il nostro team offre valutazioni, interventi e supporto personalizzato per famiglie e persone di tutte le età."
         type="article"
       />
       <div className="bg-teal-600 text-white py-16">

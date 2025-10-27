@@ -15,8 +15,8 @@ export default function CosaFacciamo() {
   return (
     <>
       <SEO
-        title="Cosa Facciamo"
-        description="Scopri i servizi specialistici di Maratonda: ABA, psicoterapia, neuropsicomotricità, logopedia e molto altro. Interventi personalizzati per il benessere delle persone neurodiverse."
+        title="Cosa Facciamo — Servizi per autismo a Roma | Maratonda"
+        description="Servizi specialistici a Roma per autismo e neurodiversità: ABA, psicoterapia, neuropsicomotricità, logopedia e supporto scolastico. Scopri i nostri percorsi personalizzati." 
         type="article"
       />
       <div className="bg-teal-600 text-white py-16">

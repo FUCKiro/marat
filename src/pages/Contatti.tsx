@@ -43,10 +43,30 @@ export default function Contatti() {
   return (
     <>
       <SEO
-        title="Contatti"
-        description="Contatta Maratonda per informazioni sui nostri servizi. Siamo a Roma e offriamo supporto specialistico per persone neurodiverse e le loro famiglie."
-        type="article"
+        title="Contatti — Maratonda (Studio Psicologi a Roma)"
+        description="Contatta Maratonda a Roma per valutazioni e interventi specialistici su autismo e neurodiversità. Prenota una prima visita o richiedi informazioni su percorsi ABA, psicoterapia e supporto per famiglie."
+        type="contact_point"
       />
+
+      {/* ContactPage structured data */}
+      <script type="application/ld+json">{`{
+        "@context": "https://schema.org",
+        "@type": "ContactPage",
+        "mainEntity": {
+          "@type": "Organization",
+          "name": "Maratonda",
+          "url": "https://associazione-maratonda.it",
+          "email": "associazionemaratonda@gmail.com",
+          "telephone": "+39 351 479 0620",
+          "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "Largo Bacone, 16",
+            "addressLocality": "Roma",
+            "postalCode": "00137",
+            "addressCountry": "IT"
+          }
+        }
+      }`}</script>
       <div className="bg-teal-600 text-white py-16">
         <PageBackground3D pattern="circles" />
         <div className="container mx-auto px-4">
