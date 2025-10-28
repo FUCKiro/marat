@@ -34,6 +34,12 @@ function App() {
             >
               Scopri di più
             </Link>
+            <Link
+              to="/autismo"
+              className="bg-amber-500 text-white px-8 py-3 rounded-full font-semibold hover:bg-amber-600 transition-all shadow-lg"
+            >
+              Servizi per Autismo
+            </Link>
           </div>
         </div>
       </section>
