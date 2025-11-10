@@ -469,6 +469,7 @@ export function useDashboard() {
       const visitData = {
         operatorId: formData.get('operatorId'),
         patientId: formData.get('patientId'),
+        type: formData.get('type'),
         date: Timestamp.fromDate(new Date(formData.get('date') as string)),
         duration: Number(formData.get('duration')),
         updatedAt: Timestamp.fromDate(new Date())

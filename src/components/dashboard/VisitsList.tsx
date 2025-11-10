@@ -87,9 +87,9 @@ export default function VisitsList({ isAdmin, exporting, onExport, onEdit, onDel
         <ul className="divide-y divide-gray-200">
           {currentMonthVisits.map((visit) => (
             <li key={visit.id} className="px-4 py-4 sm:px-6 hover:bg-gray-50">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-sm font-medium text-teal-600">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1">
+                  <div className="text-sm font-medium text-teal-600 mb-2">
                     {visit.date.toLocaleDateString('it-IT', {
                       weekday: 'long',
                       year: 'numeric',
@@ -97,26 +97,40 @@ export default function VisitsList({ isAdmin, exporting, onExport, onEdit, onDel
                       day: 'numeric'
                     })}
                   </div>
-                  <div className="text-sm text-gray-500">
-                    Paziente: {patientsMap[visit.patientId]?.name || 'Paziente non trovato'}
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    Tipologia: {visit.type}
-                  </div>
-                  {isAdmin && (
-                    <div className="text-sm text-gray-500">
-                      Operatore: {usersMap[visit.operatorId]?.name || 'Operatore non trovato'}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div className="text-sm">
+                      <span className="text-gray-500">Paziente:</span>
+                      <span className="ml-2 font-medium text-gray-800">
+                        {patientsMap[visit.patientId]?.name || 'Paziente non trovato'}
+                      </span>
                     </div>
-                  )}
-                </div>
-                <div className="text-sm text-gray-500">
-                  Durata: {visit.duration} minuti
+                    <div className="text-sm">
+                      <span className="text-gray-500">Tipologia:</span>
+                      <span className="ml-2 inline-block px-2 py-1 rounded-full bg-blue-100 text-blue-800 font-medium text-xs">
+                        {visit.type}
+                      </span>
+                    </div>
+                    {isAdmin && (
+                      <div className="text-sm">
+                        <span className="text-gray-500">Operatore:</span>
+                        <span className="ml-2 font-medium text-gray-800">
+                          {usersMap[visit.operatorId]?.name || 'Operatore non trovato'}
+                        </span>
+                      </div>
+                    )}
+                    <div className="text-sm">
+                      <span className="text-gray-500">Durata:</span>
+                      <span className="ml-2 font-medium text-gray-800">
+                        {visit.duration} minuti
+                      </span>
+                    </div>
+                  </div>
                 </div>
                 {isAdmin && (
-                  <div className="flex flex-col sm:flex-row items-end sm:items-center sm:space-x-4 space-y-2 sm:space-y-0">
+                  <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 whitespace-nowrap">
                     <button
                       onClick={() => handleEdit(visit)}
-                      className="text-teal-600 hover:text-teal-800 transition-colors font-medium"
+                      className="text-teal-600 hover:text-teal-800 transition-colors font-medium text-sm"
                     >
                       Modifica
                     </button>
@@ -151,31 +165,48 @@ export default function VisitsList({ isAdmin, exporting, onExport, onEdit, onDel
                   <ul className="divide-y divide-gray-200">
                     {monthVisits.map((visit) => (
                       <li key={visit.id} className="px-4 py-4 sm:px-6 hover:bg-gray-50">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <div className="text-sm font-medium text-teal-600">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <div className="text-sm font-medium text-teal-600 mb-2">
                               {visit.date.toLocaleDateString('it-IT', {
                                 weekday: 'long',
                                 day: 'numeric'
                               })}
                             </div>
-                            <div className="text-sm text-gray-500">
-                              Paziente: {patientsMap[visit.patientId]?.name || 'Paziente non trovato'}
-                            </div>
-                            {isAdmin && (
-                              <div className="text-sm text-gray-500">
-                                Operatore: {usersMap[visit.operatorId]?.name || 'Operatore non trovato'}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              <div className="text-sm">
+                                <span className="text-gray-500">Paziente:</span>
+                                <span className="ml-2 font-medium text-gray-800">
+                                  {patientsMap[visit.patientId]?.name || 'Paziente non trovato'}
+                                </span>
                               </div>
-                            )}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            Durata: {visit.duration} minuti
+                              <div className="text-sm">
+                                <span className="text-gray-500">Tipologia:</span>
+                                <span className="ml-2 inline-block px-2 py-1 rounded-full bg-blue-100 text-blue-800 font-medium text-xs">
+                                  {visit.type}
+                                </span>
+                              </div>
+                              {isAdmin && (
+                                <div className="text-sm">
+                                  <span className="text-gray-500">Operatore:</span>
+                                  <span className="ml-2 font-medium text-gray-800">
+                                    {usersMap[visit.operatorId]?.name || 'Operatore non trovato'}
+                                  </span>
+                                </div>
+                              )}
+                              <div className="text-sm">
+                                <span className="text-gray-500">Durata:</span>
+                                <span className="ml-2 font-medium text-gray-800">
+                                  {visit.duration} minuti
+                                </span>
+                              </div>
+                            </div>
                           </div>
                           {isAdmin && (
-                            <div className="flex flex-col sm:flex-row items-end sm:items-center sm:space-x-4 space-y-2 sm:space-y-0">
+                            <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 whitespace-nowrap">
                               <button
                                 onClick={() => handleEdit(visit)}
-                               className="text-teal-600 hover:text-teal-800 transition-colors font-medium"
+                               className="text-teal-600 hover:text-teal-800 transition-colors font-medium text-sm"
                               >
                                 Modifica
                               </button>

@@ -176,23 +176,6 @@ export default function AdminDashboard({
 
 
 
-          {editingVisit && !showAddVisit && (
-            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-              <div className="w-full max-w-2xl">
-                <AdminVisitForm
-                  error={error}
-                  success={success}
-                  onSubmit={onEditVisit}
-                  operators={operators}
-                  patients={patients}
-                  initialData={editingVisit}
-                  isEditing={true}
-                  onCancel={() => setEditingVisit(null)}
-                />
-              </div>
-            </div>
-          )}
-
           {editingUser && (
             <EditUserForm
               user={editingUser}
@@ -249,6 +232,23 @@ export default function AdminDashboard({
               patients={patients}
               isEditing={false}
             />
+          )}
+
+          {editingVisit && (
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+              <div className="w-full max-w-2xl">
+                <AdminVisitForm
+                  error={error}
+                  success={success}
+                  onSubmit={onEditVisit}
+                  operators={operators}
+                  patients={patients}
+                  initialData={editingVisit}
+                  isEditing={true}
+                  onCancel={() => setEditingVisit(null)}
+                />
+              </div>
+            </div>
           )}
 
           <VisitsList
