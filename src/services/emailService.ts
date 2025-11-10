@@ -360,8 +360,12 @@ Associazione Maratonda`;
       hasAttachment: !!pdfBase64
     });
 
-    // Call Netlify Function
-    const response = await fetch('http://localhost:9999/.netlify/functions/send-invoice', {
+    // Call Netlify Function (usa URL relativo per funzionare sia in dev che in produzione)
+    const functionUrl = import.meta.env.DEV 
+      ? 'http://localhost:9999/.netlify/functions/send-invoice'
+      : '/.netlify/functions/send-invoice';
+    
+    const response = await fetch(functionUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
