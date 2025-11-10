@@ -116,23 +116,6 @@ export function useDashboard() {
     setUsers(usersData);
   }
 
-  async function fetchPatients() {
-    if (!db) {
-      console.error('Database not initialized');
-      return;
-    }
-    
-    const usersRef = collection(db!, 'users');
-    const q = query(usersRef, where('role', '==', 'patient'));
-    const querySnapshot = await getDocs(q);
-    const patientsData = querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      createdAt: (doc.data().createdAt as Timestamp).toDate()
-    })).sort((a, b) => ((a as User).name || '').localeCompare(((b as User).name || ''))) as User[];
-    setPatients(patientsData);
-  }
-
   const handleDeleteUser = async (userId: string) => {
     if (!db) {
       console.error('Database not initialized');

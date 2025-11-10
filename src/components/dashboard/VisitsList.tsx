@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useVisits } from '../../hooks/useVisits';
 import { Visit } from '../../types';
 

@@ -1,5 +1,3 @@
-import React from 'react';
-import { Users } from 'lucide-react';
 import PageBackground3D from '../components/PageBackground3D';
 import ScrollAnimation from '../components/ScrollAnimation';
 import SEO from '../components/SEO';

@@ -1,4 +1,3 @@
-import React from 'react';
 import type { Service } from '../types';
 import { services } from '../data/services';
 import { Heart, Brain, Users, Sparkles, Activity, MessageSquare, GraduationCap, BookOpen } from 'lucide-react';
