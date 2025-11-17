@@ -18,6 +18,8 @@ export default function InvoicesList() {
   const [adjustInvoice, setAdjustInvoice] = useState<Invoice | null>(null);
   const [adjustAmount, setAdjustAmount] = useState<string>('0');
   const [adjustReason, setAdjustReason] = useState<string>('');
+  const [adjustType, setAdjustType] = useState<'discount' | 'surcharge'>('discount');
+  const [invoiceNotes, setInvoiceNotes] = useState<string>('');
   const [updatingPrice, setUpdatingPrice] = useState<boolean>(false);
   const [sendingEmail, setSendingEmail] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -80,15 +82,33 @@ export default function InvoicesList() {
 
   const openAdjustModal = (invoice: Invoice) => {
     setAdjustInvoice(invoice);
-    setAdjustAmount(String(invoice.adjustmentAmount ?? 0));
     setAdjustReason(invoice.adjustmentReason ?? '');
+    setInvoiceNotes(invoice.notes ?? '');
+    
+    // Converti l'adjustmentAmount da euro a percentuale
+    const adjustmentEuro = invoice.adjustmentAmount ?? 0;
+    if (adjustmentEuro !== 0) {
+      // Calcola la percentuale dal valore in euro
+      const percentage = (Math.abs(adjustmentEuro) / invoice.subtotal) * 100;
+      setAdjustAmount(String(Math.round(percentage * 10) / 10)); // Arrotonda a 1 decimale
+      // Se è negativo, è sconto; se positivo, è sovraprezzo
+      setAdjustType(adjustmentEuro < 0 ? 'discount' : 'surcharge');
+    } else {
+      setAdjustAmount('0');
+      setAdjustType('discount');
+    }
+    
     setShowAdjustModal(true);
   };
 
   const computedNewTotal = () => {
     if (!adjustInvoice) return 0;
-    const amt = parseFloat(adjustAmount || '0');
-    const newTotal = adjustInvoice.subtotal + adjustInvoice.tax + (isNaN(amt) ? 0 : amt);
+    const percentage = parseFloat(adjustAmount || '0');
+    // Calcola l'adeguamento in euro dalla percentuale sul subtotale
+    const adjustmentAmount = isNaN(percentage) ? 0 : (adjustInvoice.subtotal * percentage / 100);
+    // Se è sconto, sottrai; se è sovraprezzo, somma
+    const finalAdjustment = adjustType === 'discount' ? -adjustmentAmount : adjustmentAmount;
+    const newTotal = adjustInvoice.subtotal + adjustInvoice.tax + finalAdjustment;
     return Math.round(newTotal * 100) / 100;
   };
 
@@ -96,18 +116,22 @@ export default function InvoicesList() {
     if (!db || !adjustInvoice) return;
     setUpdatingPrice(true);
     try {
-      const amt = parseFloat(adjustAmount || '0');
+      const percentage = parseFloat(adjustAmount || '0');
+      const adjustmentAmount = isNaN(percentage) ? 0 : (adjustInvoice.subtotal * percentage / 100);
+      // Salva come negativo se sconto, positivo se sovraprezzo
+      const finalAdjustment = adjustType === 'discount' ? -adjustmentAmount : adjustmentAmount;
       const newTotal = computedNewTotal();
       const invoiceRef = doc(db, 'invoices', adjustInvoice.id);
       await updateDoc(invoiceRef, {
-        adjustmentAmount: isNaN(amt) ? 0 : amt,
+        adjustmentAmount: finalAdjustment,
         adjustmentReason: adjustReason || '',
+        notes: invoiceNotes || '',
         total: newTotal
       });
 
       setInvoices(prev => prev.map(inv =>
         inv.id === adjustInvoice.id
-          ? { ...inv, adjustmentAmount: isNaN(amt) ? 0 : amt, adjustmentReason: adjustReason || '', total: newTotal }
+          ? { ...inv, adjustmentAmount: finalAdjustment, adjustmentReason: adjustReason || '', notes: invoiceNotes || '', total: newTotal }
           : inv
       ));
       setSuccess('Prezzo della fattura aggiornato con successo');
@@ -911,14 +935,45 @@ export default function InvoicesList() {
             </div>
             <div className="p-4 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Adeguamento (può essere negativo)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Tipo di adeguamento</label>
+                <div className="flex gap-6">
+                  <div className="flex items-center">
+                    <input
+                      type="radio"
+                      id="discount"
+                      name="adjustType"
+                      value="discount"
+                      checked={adjustType === 'discount'}
+                      onChange={() => setAdjustType('discount')}
+                      className="h-4 w-4 text-teal-600"
+                    />
+                    <label htmlFor="discount" className="ml-2 text-sm text-gray-700">Sconto</label>
+                  </div>
+                  <div className="flex items-center">
+                    <input
+                      type="radio"
+                      id="surcharge"
+                      name="adjustType"
+                      value="surcharge"
+                      checked={adjustType === 'surcharge'}
+                      onChange={() => setAdjustType('surcharge')}
+                      className="h-4 w-4 text-teal-600"
+                    />
+                    <label htmlFor="surcharge" className="ml-2 text-sm text-gray-700">Sovraprezzo</label>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  {adjustType === 'discount' ? 'Sconto percentuale (%)' : 'Sovraprezzo percentuale (%)'}
+                </label>
                 <input
                   type="number"
-                  step="0.01"
+                  step="0.1"
                   value={adjustAmount}
                   onChange={(e) => setAdjustAmount(e.target.value)}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"
-                  placeholder="Es. -10.00 sconto, 15.00 adeguamento"
+                  placeholder={adjustType === 'discount' ? 'Es. 10 per uno sconto del 10%' : 'Es. 5 per un sovraprezzo del 5%'}
                 />
               </div>
               <div>
@@ -931,6 +986,16 @@ export default function InvoicesList() {
                   placeholder="Es. Sconto familiare / Distanza chilometrica"
                 />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Note sulla fattura (opzionale)</label>
+                <textarea
+                  value={invoiceNotes}
+                  onChange={(e) => setInvoiceNotes(e.target.value)}
+                  rows={4}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"
+                  placeholder="Aggiungi note che appariranno nella fattura..."
+                />
+              </div>
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Subtotale:</span>
@@ -941,9 +1006,14 @@ export default function InvoicesList() {
                   <span className="font-medium">{formatCurrency(adjustInvoice.tax)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">{(parseFloat(adjustAmount || '0')) < 0 ? 'Sconto:' : 'Maggiorazione:'}</span>
-                  <span className={(parseFloat(adjustAmount || '0')) < 0 ? 'font-medium text-red-600' : 'font-medium text-teal-700'}>
-                    {formatCurrency(parseFloat(adjustAmount || '0'))}
+                  <span className="text-gray-600">
+                    {adjustType === 'discount' ? `Sconto (${adjustAmount}%):` : `Sovraprezzo (${adjustAmount}%):`}
+                  </span>
+                  <span className={adjustType === 'discount' ? 'font-medium text-red-600' : 'font-medium text-green-600'}>
+                    {adjustType === 'discount' 
+                      ? `-${formatCurrency(adjustInvoice.subtotal * parseFloat(adjustAmount || '0') / 100)}`
+                      : `+${formatCurrency(adjustInvoice.subtotal * parseFloat(adjustAmount || '0') / 100)}`
+                    }
                   </span>
                 </div>
                 <div className="border-t border-gray-300 pt-2 mt-2">

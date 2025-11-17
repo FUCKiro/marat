@@ -287,6 +287,14 @@ export default function InvoicePDFGenerator({ invoice, onPDFGenerated }: Props) 
           </div>
         </div>
 
+        {/* Notes Section */}
+        {invoice.notes && (
+          <div className="mb-8 p-4 bg-gray-50 border-2 border-gray-300 rounded-lg min-h-20">
+            <h3 className="text-sm font-semibold text-gray-800 mb-2">Note:</h3>
+            <p className="text-sm text-gray-700 whitespace-pre-wrap">{invoice.notes}</p>
+          </div>
+        )}
+
         {/* Payment Info */}
         <div className="border-t border-gray-200 pt-6">
           <div className="mb-4">
