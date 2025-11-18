@@ -14,16 +14,8 @@ export default function TherapyPricesManager() {
   const [editingPrice, setEditingPrice] = useState<TherapyPrice | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
-
-  const therapyTypes = [
-    'Psicoterapia',
-    'Psicoeducazione', 
-    'ABA',
-    'Logopedia',
-    'Neuropsicomotricità',
-    'Gruppo',
-    'GLO'
-  ];
+  const [formTherapyType, setFormTherapyType] = useState<string>('');
+  const [formPricePerHour, setFormPricePerHour] = useState<string>('');
 
 
 
@@ -69,31 +61,38 @@ export default function TherapyPricesManager() {
     setError('');
     setSuccess('');
 
-    const formData = new FormData(e.target as HTMLFormElement);
-    const type = formData.get('type') as string;
-    const pricePerHour = parseFloat(formData.get('pricePerHour') as string);
-    const notes = formData.get('notes') as string;
+    if (!formTherapyType.trim()) {
+      setError('Inserisci il tipo di terapia');
+      return;
+    }
+
+    const pricePerHour = parseFloat(formPricePerHour);
+    if (isNaN(pricePerHour) || pricePerHour <= 0) {
+      setError('Inserisci un prezzo valido');
+      return;
+    }
 
     // Check if price already exists for this therapy type
-    if (prices.some(p => p.type === type)) {
+    if (prices.some(p => p.type.toLowerCase() === formTherapyType.toLowerCase())) {
       setError('Prezzo già esistente per questa tipologia di terapia');
       return;
     }
 
     try {
       const priceData = {
-        type,
+        type: formTherapyType.trim(),
         pricePerHour,
-        notes: notes || '',
+        notes: '',
         createdAt: Timestamp.fromDate(new Date())
       };
 
       await addDoc(collection(db, 'therapyPrices'), priceData);
       setSuccess('Prezzo aggiunto con successo');
+      setFormTherapyType('');
+      setFormPricePerHour('');
       setShowAddForm(false);
-      (e.target as HTMLFormElement).reset();
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || 'Errore nell\'aggiunta del prezzo');
     }
   };
 
@@ -197,72 +196,58 @@ export default function TherapyPricesManager() {
       {showAddForm && (
         <div className="border-t border-gray-200 px-4 py-5 sm:px-6">
           <form onSubmit={handleAddPrice} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="type" className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Tipologia Terapia
-                </label>
-                <select
-                  id="type"
-                  name="type"
-                  required
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500"
-                >
-                  <option value="">Seleziona tipologia</option>
-                  {therapyTypes
-                    .filter(type => !prices.some(p => p.type === type))
-                    .map(type => (
-                      <option key={type} value={type}>{type}</option>
-                    ))}
-                </select>
-              </div>
-              <div>
-                <label htmlFor="pricePerHour" className="block text-sm font-medium text-gray-700">
-                  Sessione (€ IVA inclusa)
-                </label>
-                <input
-                  type="number"
-                  id="pricePerHour"
-                  name="pricePerHour"
-                  step="0.01"
-                  min="0"
-                  required
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500"
-                />
-              </div>
-              <div>
-                <label htmlFor="notes" className="block text-sm font-medium text-gray-700">
-                  Note (opzionale)
                 </label>
                 <input
                   type="text"
-                  id="notes"
-                  name="notes"
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500"
+                  value={formTherapyType}
+                  onChange={(e) => setFormTherapyType(e.target.value)}
+                  placeholder="Es. Psicoterapia, ABA, Logopedia..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Prezzo per ora (€)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={formPricePerHour}
+                  onChange={(e) => setFormPricePerHour(e.target.value)}
+                  placeholder="Es. 50.00"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500"
                 />
               </div>
             </div>
-            <div className="flex justify-end space-x-3">
+            <div className="flex gap-2 justify-end">
               <button
                 type="button"
-                onClick={() => setShowAddForm(false)}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                onClick={() => {
+                  setShowAddForm(false);
+                  setFormTherapyType('');
+                  setFormPricePerHour('');
+                }}
+                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
               >
-                <X className="h-4 w-4 mr-2" />
                 Annulla
               </button>
               <button
                 type="submit"
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700"
+                className="px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700"
               >
-                <Save className="h-4 w-4 mr-2" />
-                Salva Sessione
+                Aggiungi
               </button>
             </div>
           </form>
         </div>
       )}
 
+      {/* Lista Prezzi */};
+      {/* Lista Prezzi */}
       <div className="border-t border-gray-200">
         {prices.length === 0 ? (
           <div className="px-4 py-8 text-center text-gray-500">
