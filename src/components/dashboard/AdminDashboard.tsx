@@ -71,7 +71,7 @@ export default function AdminDashboard({
   const tabs = [
       { id: 'users' as const, label: 'Gestione Utenti', icon: Users },
       { id: 'visits' as const, label: 'Gestione Visite', icon: Calendar },
-      { id: 'prices' as const, label: 'Prezzi Terapie', icon: Euro },
+      { id: 'prices' as const, label: 'Terapie e Prezzi', icon: Euro },
       { id: 'invoicing' as const, label: 'Fatturazione', icon: FileText },
       { id: 'history' as const, label: 'Storico Fatture', icon: History }
     ];
