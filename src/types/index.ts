@@ -61,7 +61,7 @@ export interface Visit {
   id: string;
   operatorId: string;
   patientId: string;
-  type: 'Psicoterapia' | 'Psicoeducazione' | 'ABA' | 'Logopedia' | 'Neuropsicomotricità' | 'Gruppo' | 'GLO';
+  type: string;
   date: Date;
   duration: number; // in minutes
   notes?: string;
@@ -71,7 +71,7 @@ export interface Visit {
 
 export interface TherapyPrice {
   id: string;
-  type: 'Psicoterapia' | 'Psicoeducazione' | 'ABA' | 'Logopedia' | 'Neuropsicomotricità' | 'Gruppo' | 'GLO';
+  type: string;
   pricePerHour: number;
   notes?: string;
   createdAt: Date;

@@ -81,6 +81,8 @@ export default function InvoicesList() {
   };
 
   const openAdjustModal = (invoice: Invoice) => {
+    if (!window.confirm('Sei sicuro di voler modificare il prezzo di questa fattura?')) return;
+
     setAdjustInvoice(invoice);
     setAdjustReason(invoice.adjustmentReason ?? '');
     setInvoiceNotes(invoice.notes ?? '');
@@ -212,6 +214,8 @@ export default function InvoicesList() {
   };
 
   const handleSendEmail = async (invoice: Invoice) => {
+    if (!window.confirm('Sei sicuro di voler inviare questa fattura via email?')) return;
+
     if (!invoice.billingInfo.email) {
       setError('Email del paziente non configurata');
       return;
@@ -732,6 +736,7 @@ export default function InvoicesList() {
                            {invoice.status === 'proforma' && (
                              <button
                                onClick={async () => {
+                                 if (!window.confirm('Sei sicuro di voler convertire questa proforma in fattura finale? L\'operazione è irreversibile.')) return;
                                  const success = await convertToFinalInvoice(invoice.id);
                                  if (success) {
                                    fetchInvoices(); // Refresh the list
@@ -862,6 +867,7 @@ export default function InvoicesList() {
                      {invoice.status === 'proforma' && (
                        <button
                          onClick={async () => {
+                           if (!window.confirm('Sei sicuro di voler convertire questa proforma in fattura finale? L\'operazione è irreversibile.')) return;
                            const success = await convertToFinalInvoice(invoice.id);
                            if (success) {
                              fetchInvoices();

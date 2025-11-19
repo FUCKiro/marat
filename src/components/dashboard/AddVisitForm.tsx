@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User } from '../../types';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../../config/firebase';
 
 interface Props {
   error: string;
@@ -15,6 +17,27 @@ export default function AddVisitForm({ error, success, onSubmit, patients }: Pro
     date: new Date().toISOString().split('T')[0],
     duration: 60
   });
+  const [therapyTypes, setTherapyTypes] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchTherapyTypes = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'therapyPrices'));
+        const types = querySnapshot.docs.map(doc => doc.data().type as string);
+        const uniqueTypes = Array.from(new Set(types)).sort();
+        if (uniqueTypes.length > 0) {
+          setTherapyTypes(uniqueTypes);
+          // If current type is not in the list, set to first available
+          if (!uniqueTypes.includes(formData.type)) {
+            setFormData(prev => ({ ...prev, type: uniqueTypes[0] }));
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching therapy types:", error);
+      }
+    };
+    fetchTherapyTypes();
+  }, []);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -71,13 +94,21 @@ export default function AddVisitForm({ error, success, onSubmit, patients }: Pro
             onChange={handleChange}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"
           >
-            <option value="Psicoterapia">Psicoterapia</option>
-            <option value="Psicoeducazione">Psicoeducazione</option>
-            <option value="ABA">ABA</option>
-            <option value="Logopedia">Logopedia</option>
-            <option value="Neuropsicomotricità">Neuropsicomotricità</option>
-            <option value="Gruppo">Gruppo</option>
-            <option value="GLO">GLO</option>
+            {therapyTypes.length > 0 ? (
+              therapyTypes.map(type => (
+                <option key={type} value={type}>{type}</option>
+              ))
+            ) : (
+              <>
+                <option value="Psicoterapia">Psicoterapia</option>
+                <option value="Psicoeducazione">Psicoeducazione</option>
+                <option value="ABA">ABA</option>
+                <option value="Logopedia">Logopedia</option>
+                <option value="Neuropsicomotricità">Neuropsicomotricità</option>
+                <option value="Gruppo">Gruppo</option>
+                <option value="GLO">GLO</option>
+              </>
+            )}
           </select>
         </div>
         <div>
