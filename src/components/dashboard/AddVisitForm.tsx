@@ -135,9 +135,12 @@ export default function AddVisitForm({ error, success, onSubmit, patients }: Pro
             onChange={handleChange}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"
           >
+            <option value={30}>30 minuti</option>
             <option value={60}>1 ora (60 minuti)</option>
             <option value={90}>1 ora e mezza (90 minuti)</option>
             <option value={120}>2 ore (120 minuti)</option>
+            <option value={150}>2 ore e mezza (150 minuti)</option>
+            <option value={180}>3 ore (180 minuti)</option>
           </select>
         </div>
         <button

@@ -139,6 +139,11 @@ export default function Dashboard() {
               success={success}
               onAddVisit={handleAddVisit}
               patients={patients}
+              editingVisit={editingVisit}
+              setEditingVisit={setEditingVisit}
+              onEditVisit={handleEditVisit}
+              deletingVisit={deletingVisit}
+              onDeleteVisit={handleDeleteVisit}
             />
           )}
 

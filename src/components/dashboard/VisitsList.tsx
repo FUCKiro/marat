@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useVisits } from '../../hooks/useVisits';
 import { Visit } from '../../types';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface Props {
   isAdmin: boolean;
@@ -13,6 +14,7 @@ interface Props {
 
 export default function VisitsList({ isAdmin, exporting, onExport, onEdit, onDelete, deletingVisit }: Props) {
   const { visits, usersMap, patientsMap } = useVisits();
+  const { currentUser } = useAuth();
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const handleEdit = (visit: Visit) => {
     if (onEdit) {
@@ -126,7 +128,7 @@ export default function VisitsList({ isAdmin, exporting, onExport, onEdit, onDel
                     </div>
                   </div>
                 </div>
-                {isAdmin && (
+                {(isAdmin || (currentUser?.role === 'operator' && visit.operatorId === currentUser?.id)) && (
                   <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 whitespace-nowrap">
                     <button
                       onClick={() => handleEdit(visit)}
@@ -202,7 +204,7 @@ export default function VisitsList({ isAdmin, exporting, onExport, onEdit, onDel
                               </div>
                             </div>
                           </div>
-                          {isAdmin && (
+                          {(isAdmin || (currentUser?.role === 'operator' && visit.operatorId === currentUser?.id)) && (
                             <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 whitespace-nowrap">
                               <button
                                 onClick={() => handleEdit(visit)}
@@ -233,7 +235,7 @@ export default function VisitsList({ isAdmin, exporting, onExport, onEdit, onDel
           </div>
         )}
       </div>
-      {isAdmin && confirmDeleteId && (
+      {confirmDeleteId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
           <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Conferma eliminazione</h3>

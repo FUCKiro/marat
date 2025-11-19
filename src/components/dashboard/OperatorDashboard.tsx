@@ -1,7 +1,9 @@
 import React from 'react';
 import AddVisitForm from './AddVisitForm';
+import AdminVisitForm from './AdminVisitForm';
 import VisitsList from './VisitsList';
-import { User } from '../../types';
+import { User, Visit } from '../../types';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface Props {
   showAddVisit: boolean;
@@ -10,6 +12,11 @@ interface Props {
   success: string;
   onAddVisit: (e: React.FormEvent) => Promise<void>;
   patients: User[];
+  editingVisit: Visit | null;
+  setEditingVisit: (visit: Visit | null) => void;
+  onEditVisit: (e: React.FormEvent) => Promise<void>;
+  deletingVisit: string | null;
+  onDeleteVisit: (visitId: string) => Promise<void>;
 }
 
 export default function OperatorDashboard({
@@ -18,8 +25,15 @@ export default function OperatorDashboard({
   error,
   success,
   onAddVisit,
-  patients
+  patients,
+  editingVisit,
+  setEditingVisit,
+  onEditVisit,
+  deletingVisit,
+  onDeleteVisit
 }: Props) {
+  const { currentUser } = useAuth();
+
   return (
     <>
       <div className="mb-8">
@@ -43,7 +57,29 @@ export default function OperatorDashboard({
         )}
       </div>
 
-      <VisitsList isAdmin={false} />
+      <VisitsList 
+        isAdmin={false} 
+        onEdit={setEditingVisit}
+        onDelete={onDeleteVisit}
+        deletingVisit={deletingVisit}
+      />
+
+      {editingVisit && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="max-w-2xl w-full">
+            <AdminVisitForm
+              error={error}
+              success={success}
+              onSubmit={onEditVisit}
+              operators={currentUser ? [currentUser] : []}
+              patients={patients}
+              initialData={editingVisit}
+              isEditing={true}
+              onCancel={() => setEditingVisit(null)}
+            />
+          </div>
+        </div>
+      )}
     </>
   );
 }
