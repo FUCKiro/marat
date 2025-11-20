@@ -1,98 +1,94 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Helper function to check if a user exists
-    function userExists() {
-      return exists(/databases/$(database)/documents/users/$(request.auth.uid));
-    }
     
-    // Helper function to get user data
+    // --- Helper Functions ---
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Check if the user is accessing their own document
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Fetch the user's document from the 'users' collection
     function getUserData() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
     }
-    
-    // Helper function to check if this is the first user (becomes admin)
-    function isFirstUser() {
-      return !exists(/databases/$(database)/documents/users/**);
+
+    // Check if the user exists in the 'users' collection
+    function userExists() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid));
     }
 
-    // Helper function to check if user is admin
+    // Check for specific roles
+    function hasRole(role) {
+      return isAuthenticated() && userExists() && getUserData().role == role;
+    }
+
     function isAdmin() {
-      return userExists() && getUserData().role == 'admin';
+      return hasRole('admin');
     }
-    
-    // Helper function to check if user is operator
+
     function isOperator() {
-      return userExists() && getUserData().role == 'operator';
+      return hasRole('operator');
     }
-    
-    // Helper function to check if user has admin or operator role
+
     function isAdminOrOperator() {
-      return userExists() && (getUserData().role == 'admin' || getUserData().role == 'operator');
+      return isAdmin() || isOperator();
     }
-    
+
+    // --- Collection Rules ---
+
     match /users/{userId} {
-      // Allow read access to:
-      // - Admins and operators (can read all users)
-      // - Users can read their own data
-      allow read: if request.auth != null && 
-        (isAdminOrOperator() || request.auth.uid == userId);
+      allow read: if isAuthenticated() && (isOwner(userId) || isAdminOrOperator());
       
-      // Allow create ONLY if:
-      // 1. This is the first user (they become admin automatically)
-      // 2. OR if the current user is an admin creating new users
-      allow create: if request.auth != null &&
-        (
-          // First user becomes admin
-          (isFirstUser() && request.resource.data.role == 'admin') ||
-          // ONLY admin can create any type of user
-          (isAdmin() && request.resource.data.role in ['admin', 'operator', 'patient'])
-        );
+      // Allow create if it's the first user (admin) or if created by an admin
+      allow create: if isAuthenticated() && (
+        (!exists(/databases/$(database)/documents/users/$(request.auth.uid)) && request.resource.data.role == 'admin') || 
+        isAdmin()
+      );
       
-      // Allow update ONLY if user is admin or updating their own data
-      allow update: if request.auth != null && 
-        (isAdmin() || request.auth.uid == userId);
-      
-      // Only admins can delete users
-      allow delete: if request.auth != null && isAdmin();
+      allow update: if isAuthenticated() && (isOwner(userId) || isAdmin());
+      allow delete: if isAdmin();
     }
     
     match /visits/{visitId} {
-      // Allow read access to:
-      // - Admins and operators (can read all visits)
-      // - Patients can read their own visits
-      allow read: if request.auth != null && 
-        (isAdminOrOperator() || 
-         resource.data.patientId == request.auth.uid);
+      allow read: if isAuthenticated() && (
+        isAdminOrOperator() || 
+        resource.data.patientId == request.auth.uid
+      );
       
-      // Allow write access to:
-      // - Admins (can manage all visits)
-      // - Operators (can manage visits they created)
-      allow write: if request.auth != null && 
-        (
-          isAdmin() ||
-          (isOperator() && request.resource.data.operatorId == request.auth.uid)
-        );
+      allow create: if isAuthenticated() && (
+        isAdmin() || 
+        (isOperator() && request.resource.data.operatorId == request.auth.uid)
+      );
+      
+      allow update: if isAuthenticated() && (
+        isAdmin() || 
+        (resource.data.operatorId == request.auth.uid)
+      );
+      
+      // Simplified delete rule: Owner OR Admin
+      allow delete: if isAuthenticated() && (
+        resource.data.operatorId == request.auth.uid ||
+        isAdmin()
+      );
     }
     
     match /therapyPrices/{priceId} {
-      // Allow read access to all authenticated users
-      allow read: if request.auth != null;
-      
-      // Allow write access only to admin and operators
-      allow write: if request.auth != null && isAdminOrOperator();
+      allow read: if isAuthenticated();
+      allow write: if isAdminOrOperator();
     }
     
     match /invoices/{invoiceId} {
-      // Allow read access to:
-      // - Admins and operators (can read all invoices)
-      // - Patients can read their own invoices
-      allow read: if request.auth != null && 
-        (isAdminOrOperator() || 
-         (userExists() && resource.data.patientId == request.auth.uid));
-      
-      // Allow write access only to admin and operators
-      allow write: if request.auth != null && isAdminOrOperator();
+      allow read: if isAuthenticated() && (
+        isAdminOrOperator() || 
+        (userExists() && resource.data.patientId == request.auth.uid)
+      );
+      allow write: if isAdminOrOperator();
     }
   }
 }

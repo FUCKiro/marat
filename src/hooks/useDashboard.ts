@@ -295,7 +295,7 @@ export function useDashboard() {
       const formData = new FormData(e.target as HTMLFormElement);
       const visitData = {
         patientId: formData.get('patientId'),
-        operatorId: currentUser?.id, // Uso id invece di uid per User type
+        operatorId: formData.get('operatorId') || currentUser?.id,
         type: formData.get('type'),
         duration: parseInt(formData.get('duration') as string),
         date: Timestamp.fromDate(new Date(formData.get('date') as string)),

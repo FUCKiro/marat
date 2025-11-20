@@ -63,6 +63,28 @@ export default function AdminVisitForm({
     }));
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const operatorName = operators.find(o => o.id === formData.operatorId)?.name || 'Sconosciuto';
+    const patientName = patients.find(p => p.id === formData.patientId)?.name || 'Sconosciuto';
+    const dateStr = new Date(formData.date).toLocaleDateString('it-IT');
+    
+    const action = isEditing ? 'modificare' : 'aggiungere';
+    
+    const confirmMessage = `Riepilogo Visita:
+Operatore: ${operatorName}
+Paziente: ${patientName}
+Tipologia: ${formData.type}
+Data: ${dateStr}
+Durata: ${formData.duration} minuti
+
+Confermi di voler ${action} questa visita?`;
+
+    if (window.confirm(confirmMessage)) {
+      await onSubmit(e);
+    }
+  };
+
   return (
     <div className="bg-white p-6 rounded-lg shadow-xl">
       <h2 className="text-xl font-semibold mb-4">
@@ -78,7 +100,7 @@ export default function AdminVisitForm({
           {success}
         </div>
       )}
-      <form onSubmit={onSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700">
             Operatore

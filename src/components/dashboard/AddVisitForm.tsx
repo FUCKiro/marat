@@ -50,6 +50,24 @@ export default function AddVisitForm({ error, success, onSubmit, patients }: Pro
     }));
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const patientName = patients.find(p => p.id === formData.patientId)?.name || 'Sconosciuto';
+    const dateStr = new Date(formData.date).toLocaleDateString('it-IT');
+    
+    const confirmMessage = `Riepilogo Visita:
+Paziente: ${patientName}
+Tipologia: ${formData.type}
+Data: ${dateStr}
+Durata: ${formData.duration} minuti
+
+Confermi di voler aggiungere questa visita?`;
+
+    if (window.confirm(confirmMessage)) {
+      await onSubmit(e);
+    }
+  };
+
   return (
     <div className="mt-4 bg-white p-6 rounded-lg shadow">
       <h2 className="text-xl font-semibold mb-4">Aggiungi Nuova Visita</h2>
@@ -63,7 +81,7 @@ export default function AddVisitForm({ error, success, onSubmit, patients }: Pro
           {success}
         </div>
       )}
-      <form onSubmit={onSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700">
             Paziente
