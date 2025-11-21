@@ -159,6 +159,12 @@ Confermi di voler aggiungere questa visita?`;
             <option value={120}>2 ore (120 minuti)</option>
             <option value={150}>2 ore e mezza (150 minuti)</option>
             <option value={180}>3 ore (180 minuti)</option>
+            <option value={210}>3 ore e mezza (210 minuti)</option>
+            <option value={240}>4 ore (240 minuti)</option>
+            <option value={270}>4 ore e mezza (270 minuti)</option>
+            <option value={300}>5 ore (300 minuti)</option>
+            <option value={330}>5 ore e mezza (330 minuti)</option>
+            <option value={360}>6 ore (360 minuti)</option>
           </select>
         </div>
         <button
