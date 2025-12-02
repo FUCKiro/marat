@@ -367,7 +367,7 @@ export function useDashboard() {
     }
   };
 
-  const exportVisitsToExcel = async () => {
+  const exportVisitsToExcel = async (month?: number, year?: number) => {
     if (!db) {
       console.error('Database not initialized');
       setError('Database non inizializzato');
@@ -381,11 +381,19 @@ export function useDashboard() {
       const visitsRef = collection(db!, 'visits');
       const querySnapshot = await getDocs(visitsRef);
       
-      const visits = querySnapshot.docs.map(doc => ({
+      let visits = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
         date: (doc.data().date as Timestamp).toDate()
       })) as Visit[];
+
+      // Filter by selected month/year if provided
+      if (month !== undefined && year !== undefined) {
+        visits = visits.filter(visit => 
+          visit.date.getMonth() === month && 
+          visit.date.getFullYear() === year
+        );
+      }
 
       // Group visits by patient
       const visitsByPatient: { [key: string]: Visit[] } = {};
@@ -421,8 +429,15 @@ export function useDashboard() {
       const ws = utils.json_to_sheet(excelData);
       utils.book_append_sheet(wb, ws, 'Visite');
 
+      // Generate filename with month/year if provided
+      const monthNames = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno',
+        'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'];
+      const filename = month !== undefined && year !== undefined 
+        ? `visite_${monthNames[month]}_${year}.xlsx`
+        : `visite_${new Date().toISOString().split('T')[0]}.xlsx`;
+
       // Save file
-      writeFile(wb, `visite_${new Date().toISOString().split('T')[0]}.xlsx`);
+      writeFile(wb, filename);
       
       setSuccess('Export completato con successo');
     } catch (err: any) {

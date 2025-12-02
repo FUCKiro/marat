@@ -27,7 +27,7 @@ interface Props {
   onAddPatient: (e: React.FormEvent) => Promise<void>;
   onAddVisit: (e: React.FormEvent) => Promise<void>;
   exporting: boolean;
-  onExport: () => Promise<void>;
+  onExport: (month: number, year: number) => Promise<void>;
   editingVisit: Visit | null;
   setEditingVisit: (visit: Visit | null) => void;
   onEditVisit: (e: React.FormEvent) => Promise<void>;

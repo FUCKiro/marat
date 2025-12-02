@@ -214,7 +214,14 @@ export default function InvoicesList() {
   };
 
   const handleSendEmail = async (invoice: Invoice) => {
-    if (!window.confirm('Sei sicuro di voler inviare questa fattura via email?')) return;
+    const isProforma = invoice.status === 'proforma';
+    const isResend = isProforma ? invoice.proformaEmailSentAt : invoice.finalEmailSentAt;
+    
+    const confirmMessage = isResend 
+      ? `Questa ${isProforma ? 'proforma' : 'fattura'} è già stata inviata. Vuoi reinviarla a ${invoice.billingInfo.email}?`
+      : `Sei sicuro di voler inviare questa ${isProforma ? 'proforma' : 'fattura'} a ${invoice.billingInfo.email}?`;
+    
+    if (!window.confirm(confirmMessage)) return;
 
     if (!invoice.billingInfo.email) {
       setError('Email del paziente non configurata');
@@ -708,7 +715,7 @@ export default function InvoicesList() {
                                 onClick={() => handleSendEmail(invoice)}
                                 disabled={sendingEmail === invoice.id}
                                 className="text-blue-600 hover:text-blue-800 transition-colors disabled:opacity-50"
-                                title="Invia email proforma"
+                                title={invoice.proformaEmailSentAt ? "Reinvia email proforma" : "Invia email proforma"}
                               >
                                 {sendingEmail === invoice.id ? (
                                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
@@ -723,7 +730,7 @@ export default function InvoicesList() {
                                 onClick={() => handleSendEmail(invoice)}
                                 disabled={sendingEmail === invoice.id}
                                 className="text-teal-600 hover:text-teal-800 transition-colors disabled:opacity-50"
-                                title="Invia email fattura finale"
+                                title={invoice.finalEmailSentAt ? "Reinvia email fattura finale" : "Invia email fattura finale"}
                               >
                                 {sendingEmail === invoice.id ? (
                                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-teal-600"></div>
@@ -845,7 +852,7 @@ export default function InvoicesList() {
                           ) : (
                             <Send className="w-4 h-4" />
                           )}
-                          Email Proforma
+                          {invoice.proformaEmailSentAt ? 'Reinvia Proforma' : 'Email Proforma'}
                         </button>
                       )}
                       
@@ -860,7 +867,7 @@ export default function InvoicesList() {
                           ) : (
                             <Send className="w-4 h-4" />
                           )}
-                          Email Finale
+                          {invoice.finalEmailSentAt ? 'Reinvia Finale' : 'Email Finale'}
                         </button>
                       )}
                      

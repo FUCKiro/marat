@@ -475,11 +475,13 @@ export const getEmailStatus = (invoice: Invoice) => {
 };
 
 export const canSendProformaEmail = (invoice: Invoice): boolean => {
-  return invoice.status === 'proforma' && !invoice.proformaEmailSentAt;
+  // Permettiamo sempre l'invio/reinvio della proforma se è ancora in stato proforma
+  return invoice.status === 'proforma';
 };
 
 export const canSendFinalEmail = (invoice: Invoice): boolean => {
-  return (invoice.status === 'final' || invoice.status === 'sent' || invoice.status === 'paid' || invoice.status === 'closed') && !invoice.finalEmailSentAt;
+  // Permettiamo sempre l'invio/reinvio della fattura finale
+  return (invoice.status === 'final' || invoice.status === 'sent' || invoice.status === 'paid' || invoice.status === 'closed');
 };
 
 export const getEmailStatusText = (invoice: Invoice): string => {
