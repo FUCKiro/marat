@@ -24,6 +24,7 @@ export default function InvoicesList() {
   const [sendingEmail, setSendingEmail] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [selectedYear, setSelectedYear] = useState<string | 'all'>('all');
   const { convertToFinalInvoice } = useInvoicing();
 
   const fetchInvoices = async () => {
@@ -526,6 +527,7 @@ export default function InvoicesList() {
   }, []);
 
   // Filter invoices based on search term and status
+  // Filter invoices based on search term, status, and year
   const filteredInvoices = invoices.filter(invoice => {
     const matchesSearch = searchTerm === '' || 
       invoice.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -533,7 +535,33 @@ export default function InvoicesList() {
     
     const matchesStatus = statusFilter === 'all' || invoice.status === statusFilter;
     
-    return matchesSearch && matchesStatus;
+    const matchesYear = selectedYear === 'all' || invoice.createdAt.getFullYear().toString() === selectedYear;
+    
+    return matchesSearch && matchesStatus && matchesYear;
+  });
+
+  // Get available years from invoices
+  const availableYears = Array.from(new Set(invoices.map(inv => inv.createdAt.getFullYear())))
+    .sort((a, b) => b - a);
+
+  // Group invoices by month
+  const groupedInvoices = filteredInvoices.reduce((acc, invoice) => {
+    const monthYear = invoice.createdAt.toLocaleDateString('it-IT', {
+      year: 'numeric',
+      month: 'long'
+    });
+    if (!acc[monthYear]) {
+      acc[monthYear] = [];
+    }
+    acc[monthYear].push(invoice);
+    return acc;
+  }, {} as Record<string, Invoice[]>);
+
+  // Sort months in descending order (newest first)
+  const sortedMonths = Object.keys(groupedInvoices).sort((a, b) => {
+    const dateA = groupedInvoices[a][0].createdAt;
+    const dateB = groupedInvoices[b][0].createdAt;
+    return dateB.getTime() - dateA.getTime();
   });
 
   if (loading) {
@@ -592,6 +620,22 @@ export default function InvoicesList() {
               </select>
             </div>
 
+            <div className="relative">
+              <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(e.target.value)}
+                className="pl-10 pr-8 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm appearance-none bg-white"
+              >
+                <option value="all">Tutti gli anni</option>
+                {availableYears.map(year => (
+                  <option key={year} value={year.toString()}>
+                    {year}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             {/* Pulsante “Normalizza IVA 0” rimosso: tutte le fatture sono IVA 0% */}
           </div>
         </div>
@@ -621,107 +665,251 @@ export default function InvoicesList() {
           <>
             {/* Desktop Table View */}
             <div className="hidden lg:block">
-              <table className="w-full table-fixed bg-white">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-36">
-                      Numero Fattura
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
-                      Paziente
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-28">
-                      Data
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-28">
-                      Scadenza
-                    </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
-                      Importo
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
-                      Stato
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-48">
-                      Email
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-36">
-                      Azioni
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {filteredInvoices.map((invoice) => (
-                    <tr key={invoice.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-4 text-sm font-medium text-gray-900 break-words">
-                        {invoice.invoiceNumber}
-                      </td>
-                      <td className="px-4 py-4 text-sm text-gray-900 break-words">
-                        <div className="flex items-center gap-2">
-                          <User className="w-4 h-4 text-gray-400" />
-                          {invoice.patientName}
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 text-sm text-gray-900">
-                        <div className="flex items-center gap-2">
-                          <Calendar className="w-4 h-4 text-gray-400" />
-                          {formatDate(invoice.createdAt)}
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 text-sm text-gray-900">
-                        {formatDate(invoice.dueDate)}
-                      </td>
-                      <td className="px-4 py-4 text-sm font-medium text-gray-900 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Euro className="w-4 h-4 text-gray-400" />
-                          {formatCurrency(invoice.total)}
-                        </div>
-                      </td>
-                      <td className="px-4 py-4">
-                        <div className="flex items-center gap-2">
-                          {getStatusIcon(invoice.status)}
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(invoice.status)}`}> 
-                            {getStatusText(invoice.status)}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 text-xs text-gray-500 break-words max-w-xs">
-                        {getEmailStatusText(invoice)}
-                      </td>
-                      <td className="px-4 py-4 text-sm text-gray-500">
-                        <div className="flex flex-wrap items-center gap-2">
-                           <button
-                              onClick={() => {
-                                setSelectedInvoice(invoice);
-                                setShowPDFGenerator(true);
-                              }}
-                              className="text-teal-600 hover:text-teal-800 transition-colors"
-                              title="Visualizza fattura"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </button>
+              {sortedMonths.map((monthYear) => (
+                <div key={monthYear} className="mb-8">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4 p-3 bg-gradient-to-r from-teal-50 to-blue-50 rounded-lg border-l-4 border-teal-600">
+                    {monthYear.charAt(0).toUpperCase() + monthYear.slice(1)}
+                  </h3>
+                  <table className="w-full table-fixed bg-white rounded-lg overflow-hidden border border-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-36">
+                          Numero Fattura
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
+                          Paziente
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-28">
+                          Data
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-28">
+                          Scadenza
+                        </th>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
+                          Importo
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
+                          Stato
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-48">
+                          Email
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-36">
+                          Azioni
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {groupedInvoices[monthYear].map((invoice) => (
+                        <tr key={invoice.id} className="hover:bg-gray-50">
+                          <td className="px-4 py-4 text-sm font-medium text-gray-900 break-words">
+                            {invoice.invoiceNumber}
+                          </td>
+                          <td className="px-4 py-4 text-sm text-gray-900 break-words">
+                            <div className="flex items-center gap-2">
+                              <User className="w-4 h-4 text-gray-400" />
+                              {invoice.patientName}
+                            </div>
+                          </td>
+                          <td className="px-4 py-4 text-sm text-gray-900">
+                            <div className="flex items-center gap-2">
+                              <Calendar className="w-4 h-4 text-gray-400" />
+                              {formatDate(invoice.createdAt)}
+                            </div>
+                          </td>
+                          <td className="px-4 py-4 text-sm text-gray-900">
+                            {formatDate(invoice.dueDate)}
+                          </td>
+                          <td className="px-4 py-4 text-sm font-medium text-gray-900 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <Euro className="w-4 h-4 text-gray-400" />
+                              {formatCurrency(invoice.total)}
+                            </div>
+                          </td>
+                          <td className="px-4 py-4">
+                            <div className="flex items-center gap-2">
+                              {getStatusIcon(invoice.status)}
+                              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(invoice.status)}`}> 
+                                {getStatusText(invoice.status)}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-4 text-xs text-gray-500 break-words max-w-xs">
+                            {getEmailStatusText(invoice)}
+                          </td>
+                          <td className="px-4 py-4 text-sm text-gray-500">
+                            <div className="flex flex-wrap items-center gap-2">
+                               <button
+                                  onClick={() => {
+                                    setSelectedInvoice(invoice);
+                                    setShowPDFGenerator(true);
+                                  }}
+                                  className="text-teal-600 hover:text-teal-800 transition-colors"
+                                  title="Visualizza fattura"
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </button>
 
-                            {/* Edit Price (Desktop icon action) */}
-                            <button
-                              onClick={() => openAdjustModal(invoice)}
-                              className="text-yellow-600 hover:text-yellow-800 transition-colors"
-                              title="Modifica prezzo"
-                            >
+                                {/* Edit Price (Desktop icon action) */}
+                                <button
+                                  onClick={() => openAdjustModal(invoice)}
+                                  className="text-yellow-600 hover:text-yellow-800 transition-colors"
+                                  title="Modifica prezzo"
+                                >
+                                  <Euro className="w-4 h-4" />
+                                </button>
+                               
+                               {canSendProformaEmail(invoice) && (
+                                  <button
+                                    onClick={() => handleSendEmail(invoice)}
+                                    disabled={sendingEmail === invoice.id}
+                                    className="text-blue-600 hover:text-blue-800 transition-colors disabled:opacity-50"
+                                    title={invoice.proformaEmailSentAt ? "Reinvia email proforma" : "Invia email proforma"}
+                                  >
+                                    {sendingEmail === invoice.id ? (
+                                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                                    ) : (
+                                      <Send className="w-4 h-4" />
+                                    )}
+                                  </button>
+                                )}
+                                
+                                {canSendFinalEmail(invoice) && (
+                                  <button
+                                    onClick={() => handleSendEmail(invoice)}
+                                    disabled={sendingEmail === invoice.id}
+                                    className="text-teal-600 hover:text-teal-800 transition-colors disabled:opacity-50"
+                                    title={invoice.finalEmailSentAt ? "Reinvia email fattura finale" : "Invia email fattura finale"}
+                                  >
+                                    {sendingEmail === invoice.id ? (
+                                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-teal-600"></div>
+                                    ) : (
+                                      <Send className="w-4 h-4" />
+                                    )}
+                                  </button>
+                                )}
+                               
+                               {invoice.status === 'proforma' && (
+                                 <button
+                                   onClick={async () => {
+                                     if (!window.confirm('Sei sicuro di voler convertire questa proforma in fattura finale? L\'operazione è irreversibile.')) return;
+                                     const success = await convertToFinalInvoice(invoice.id);
+                                     if (success) {
+                                       fetchInvoices(); // Refresh the list
+                                     }
+                                   }}
+                                   className="text-green-600 hover:text-green-800 transition-colors"
+                                   title="Converti in fattura finale (pagamento ricevuto)"
+                                 >
+                                   <CreditCard className="w-4 h-4" />
+                                 </button>
+                               )}
+                               
+                               {invoice.status === 'sent' && (
+                                 <button
+                                   onClick={() => updateInvoiceStatus(invoice.id, 'paid')}
+                                   className="text-green-600 hover:text-green-800 transition-colors"
+                                   title="Marca come pagata"
+                                 >
+                                   <CheckCircle className="w-4 h-4" />
+                                 </button>
+                               )}
+                             </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ))}
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="lg:hidden space-y-8">
+              {sortedMonths.map((monthYear) => (
+                <div key={monthYear}>
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4 p-3 bg-gradient-to-r from-teal-50 to-blue-50 rounded-lg border-l-4 border-teal-600">
+                    {monthYear.charAt(0).toUpperCase() + monthYear.slice(1)}
+                  </h3>
+                  <div className="space-y-4">
+                    {groupedInvoices[monthYear].map((invoice) => (
+                      <div key={invoice.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                        <div className="flex justify-between items-start mb-3">
+                          <div>
+                            <h3 className="font-semibold text-gray-900 text-lg">
+                              {invoice.invoiceNumber}
+                            </h3>
+                            <div className="flex items-center gap-2 text-sm text-gray-600 mt-1">
+                              <User className="w-4 h-4" />
+                              {invoice.patientName}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {getStatusIcon(invoice.status)}
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(invoice.status)}`}>
+                              {getStatusText(invoice.status)}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
+                          <div>
+                            <div className="flex items-center gap-2 text-gray-600 mb-1">
+                              <Calendar className="w-4 h-4" />
+                              <span className="font-medium">Data:</span>
+                            </div>
+                            <div className="text-gray-900">{formatDate(invoice.createdAt)}</div>
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2 text-gray-600 mb-1">
                               <Euro className="w-4 h-4" />
-                            </button>
+                              <span className="font-medium">Importo:</span>
+                            </div>
+                            <div className="text-gray-900 font-semibold">{formatCurrency(invoice.total)}</div>
+                          </div>
+                        </div>
+                        
+                        <div className="text-xs text-gray-500 mb-4">
+                          <div className="mb-1">
+                            <span className="font-medium">Scadenza:</span> {formatDate(invoice.dueDate)}
+                          </div>
+                          <div>
+                            <span className="font-medium">Email:</span> {getEmailStatusText(invoice)}
+                          </div>
+                        </div>
+                        
+                        <div className="flex flex-wrap gap-2 pt-3 border-t border-gray-100">
+                          <button
+                             onClick={() => {
+                               setSelectedInvoice(invoice);
+                               setShowPDFGenerator(true);
+                             }}
+                             className="flex items-center gap-2 px-3 py-2 text-sm bg-teal-50 text-teal-700 rounded-md hover:bg-teal-100 transition-colors"
+                           >
+                            <Eye className="w-4 h-4" />
+                             Visualizza
+                           </button>
+
+                           <button
+                             onClick={() => openAdjustModal(invoice)}
+                             className="flex items-center gap-2 px-3 py-2 text-sm bg-yellow-50 text-yellow-700 rounded-md hover:bg-yellow-100 transition-colors"
+                           >
+                             <Euro className="w-4 h-4" />
+                             Modifica Prezzo
+                           </button>
                            
                            {canSendProformaEmail(invoice) && (
                               <button
                                 onClick={() => handleSendEmail(invoice)}
                                 disabled={sendingEmail === invoice.id}
-                                className="text-blue-600 hover:text-blue-800 transition-colors disabled:opacity-50"
-                                title={invoice.proformaEmailSentAt ? "Reinvia email proforma" : "Invia email proforma"}
+                                className="flex items-center gap-2 px-3 py-2 text-sm bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100 transition-colors disabled:opacity-50"
                               >
                                 {sendingEmail === invoice.id ? (
                                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
                                 ) : (
                                   <Send className="w-4 h-4" />
                                 )}
+                                {invoice.proformaEmailSentAt ? 'Reinvia Proforma' : 'Email Proforma'}
                               </button>
                             )}
                             
@@ -729,14 +917,14 @@ export default function InvoicesList() {
                               <button
                                 onClick={() => handleSendEmail(invoice)}
                                 disabled={sendingEmail === invoice.id}
-                                className="text-teal-600 hover:text-teal-800 transition-colors disabled:opacity-50"
-                                title={invoice.finalEmailSentAt ? "Reinvia email fattura finale" : "Invia email fattura finale"}
+                                className="flex items-center gap-2 px-3 py-2 text-sm bg-teal-50 text-teal-700 rounded-md hover:bg-teal-100 transition-colors disabled:opacity-50"
                               >
                                 {sendingEmail === invoice.id ? (
                                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-teal-600"></div>
                                 ) : (
                                   <Send className="w-4 h-4" />
                                 )}
+                                {invoice.finalEmailSentAt ? 'Reinvia Finale' : 'Email Finale'}
                               </button>
                             )}
                            
@@ -746,156 +934,28 @@ export default function InvoicesList() {
                                  if (!window.confirm('Sei sicuro di voler convertire questa proforma in fattura finale? L\'operazione è irreversibile.')) return;
                                  const success = await convertToFinalInvoice(invoice.id);
                                  if (success) {
-                                   fetchInvoices(); // Refresh the list
+                                   fetchInvoices();
                                  }
                                }}
-                               className="text-green-600 hover:text-green-800 transition-colors"
-                               title="Converti in fattura finale (pagamento ricevuto)"
+                               className="flex items-center gap-2 px-3 py-2 text-sm bg-green-50 text-green-700 rounded-md hover:bg-green-100 transition-colors"
                              >
                                <CreditCard className="w-4 h-4" />
+                               Converti
                              </button>
                            )}
                            
                            {invoice.status === 'sent' && (
                              <button
                                onClick={() => updateInvoiceStatus(invoice.id, 'paid')}
-                               className="text-green-600 hover:text-green-800 transition-colors"
-                               title="Marca come pagata"
+                               className="flex items-center gap-2 px-3 py-2 text-sm bg-green-50 text-green-700 rounded-md hover:bg-green-100 transition-colors"
                              >
                                <CheckCircle className="w-4 h-4" />
+                               Pagata
                              </button>
                            )}
-                         </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Mobile Card View */}
-            <div className="lg:hidden space-y-4">
-              {filteredInvoices.map((invoice) => (
-                <div key={invoice.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                  <div className="flex justify-between items-start mb-3">
-                    <div>
-                      <h3 className="font-semibold text-gray-900 text-lg">
-                        {invoice.invoiceNumber}
-                      </h3>
-                      <div className="flex items-center gap-2 text-sm text-gray-600 mt-1">
-                        <User className="w-4 h-4" />
-                        {invoice.patientName}
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {getStatusIcon(invoice.status)}
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(invoice.status)}`}>
-                        {getStatusText(invoice.status)}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
-                    <div>
-                      <div className="flex items-center gap-2 text-gray-600 mb-1">
-                        <Calendar className="w-4 h-4" />
-                        <span className="font-medium">Data:</span>
-                      </div>
-                      <div className="text-gray-900">{formatDate(invoice.createdAt)}</div>
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2 text-gray-600 mb-1">
-                        <Euro className="w-4 h-4" />
-                        <span className="font-medium">Importo:</span>
-                      </div>
-                      <div className="text-gray-900 font-semibold">{formatCurrency(invoice.total)}</div>
-                    </div>
-                  </div>
-                  
-                  <div className="text-xs text-gray-500 mb-4">
-                    <div className="mb-1">
-                      <span className="font-medium">Scadenza:</span> {formatDate(invoice.dueDate)}
-                    </div>
-                    <div>
-                      <span className="font-medium">Email:</span> {getEmailStatusText(invoice)}
-                    </div>
-                  </div>
-                  
-                  <div className="flex flex-wrap gap-2 pt-3 border-t border-gray-100">
-                    <button
-                       onClick={() => {
-                         setSelectedInvoice(invoice);
-                         setShowPDFGenerator(true);
-                       }}
-                       className="flex items-center gap-2 px-3 py-2 text-sm bg-teal-50 text-teal-700 rounded-md hover:bg-teal-100 transition-colors"
-                     >
-                      <Eye className="w-4 h-4" />
-                       Visualizza
-                     </button>
-
-                     <button
-                       onClick={() => openAdjustModal(invoice)}
-                       className="flex items-center gap-2 px-3 py-2 text-sm bg-yellow-50 text-yellow-700 rounded-md hover:bg-yellow-100 transition-colors"
-                     >
-                       <Euro className="w-4 h-4" />
-                       Modifica Prezzo
-                     </button>
-                     
-                     {canSendProformaEmail(invoice) && (
-                        <button
-                          onClick={() => handleSendEmail(invoice)}
-                          disabled={sendingEmail === invoice.id}
-                          className="flex items-center gap-2 px-3 py-2 text-sm bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100 transition-colors disabled:opacity-50"
-                        >
-                          {sendingEmail === invoice.id ? (
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                          ) : (
-                            <Send className="w-4 h-4" />
-                          )}
-                          {invoice.proformaEmailSentAt ? 'Reinvia Proforma' : 'Email Proforma'}
-                        </button>
-                      )}
-                      
-                      {canSendFinalEmail(invoice) && (
-                        <button
-                          onClick={() => handleSendEmail(invoice)}
-                          disabled={sendingEmail === invoice.id}
-                          className="flex items-center gap-2 px-3 py-2 text-sm bg-teal-50 text-teal-700 rounded-md hover:bg-teal-100 transition-colors disabled:opacity-50"
-                        >
-                          {sendingEmail === invoice.id ? (
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-teal-600"></div>
-                          ) : (
-                            <Send className="w-4 h-4" />
-                          )}
-                          {invoice.finalEmailSentAt ? 'Reinvia Finale' : 'Email Finale'}
-                        </button>
-                      )}
-                     
-                     {invoice.status === 'proforma' && (
-                       <button
-                         onClick={async () => {
-                           if (!window.confirm('Sei sicuro di voler convertire questa proforma in fattura finale? L\'operazione è irreversibile.')) return;
-                           const success = await convertToFinalInvoice(invoice.id);
-                           if (success) {
-                             fetchInvoices();
-                           }
-                         }}
-                         className="flex items-center gap-2 px-3 py-2 text-sm bg-green-50 text-green-700 rounded-md hover:bg-green-100 transition-colors"
-                       >
-                         <CreditCard className="w-4 h-4" />
-                         Converti
-                       </button>
-                     )}
-                     
-                     {invoice.status === 'sent' && (
-                       <button
-                         onClick={() => updateInvoiceStatus(invoice.id, 'paid')}
-                         className="flex items-center gap-2 px-3 py-2 text-sm bg-green-50 text-green-700 rounded-md hover:bg-green-100 transition-colors"
-                       >
-                         <CheckCircle className="w-4 h-4" />
-                         Pagata
-                       </button>
-                     )}
+                    ))}
                   </div>
                 </div>
               ))}
