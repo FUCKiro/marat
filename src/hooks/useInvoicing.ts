@@ -18,6 +18,16 @@ export function useInvoicing() {
   const [success, setSuccess] = useState('');
   const [therapyPrices, setTherapyPrices] = useState<TherapyPrice[]>([]);
   const [monthlyTotals, setMonthlyTotals] = useState<MonthlyTotal[]>([]);
+  // Track which month/year the totals were calculated for (to prevent mismatch)
+  const [calculatedPeriod, setCalculatedPeriod] = useState<{ year: number; month: number } | null>(null);
+
+  // Clear monthly totals (used when changing month/year)
+  const clearMonthlyTotals = () => {
+    setMonthlyTotals([]);
+    setCalculatedPeriod(null);
+    setError('');
+    setSuccess('');
+  };
 
   // Fetch therapy prices
   const fetchTherapyPrices = async () => {
@@ -132,6 +142,8 @@ export function useInvoicing() {
 
       const totals = Object.values(patientTotals).filter(total => total.totalAmount > 0);
       setMonthlyTotals(totals);
+      // Save the period for which totals were calculated
+      setCalculatedPeriod({ year, month });
       setSuccess(`Calcolati i totali per ${totals.length} pazienti`);
 
     } catch (err: any) {
@@ -146,6 +158,12 @@ export function useInvoicing() {
   const generateInvoice = async (patientTotal: MonthlyTotal, year: number, month: number) => {
     if (!db) {
       setError('Database non configurato');
+      return null;
+    }
+
+    // SAFETY CHECK: Verify that totals were calculated for the same period
+    if (!calculatedPeriod || calculatedPeriod.year !== year || calculatedPeriod.month !== month) {
+      setError(`Errore: i totali sono stati calcolati per un periodo diverso. Ricalcola i totali per ${month}/${year}.`);
       return null;
     }
 
@@ -301,6 +319,7 @@ export function useInvoicing() {
     generateInvoice,
     generateAllInvoices,
     convertToFinalInvoice,
-    fetchTherapyPrices
+    fetchTherapyPrices,
+    clearMonthlyTotals
   };
 }

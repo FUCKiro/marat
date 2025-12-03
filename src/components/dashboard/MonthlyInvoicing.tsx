@@ -9,7 +9,8 @@ export default function MonthlyInvoicing() {
     success,
     monthlyTotals,
     calculateMonthlyTotals,
-    generateAllInvoices
+    generateAllInvoices,
+    clearMonthlyTotals
   } = useInvoicing();
 
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
@@ -23,6 +24,19 @@ export default function MonthlyInvoicing() {
 
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
+
+  // Reset calculation when month or year changes
+  const handleMonthChange = (newMonth: number) => {
+    setSelectedMonth(newMonth);
+    setCalculationDone(false);
+    clearMonthlyTotals();
+  };
+
+  const handleYearChange = (newYear: number) => {
+    setSelectedYear(newYear);
+    setCalculationDone(false);
+    clearMonthlyTotals();
+  };
 
   const handleCalculateTotals = async () => {
     await calculateMonthlyTotals(selectedYear, selectedMonth);
@@ -61,7 +75,7 @@ export default function MonthlyInvoicing() {
             </label>
             <select
               value={selectedMonth}
-              onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+              onChange={(e) => handleMonthChange(parseInt(e.target.value))}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
             >
               {months.map((month, index) => (
@@ -77,7 +91,7 @@ export default function MonthlyInvoicing() {
             </label>
             <select
               value={selectedYear}
-              onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+              onChange={(e) => handleYearChange(parseInt(e.target.value))}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
             >
               {years.map((year) => (

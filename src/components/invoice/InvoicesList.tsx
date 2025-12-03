@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import { collection, query, orderBy, getDocs, updateDoc, doc, Timestamp, onSnapshot } from 'firebase/firestore';
+import { collection, query, orderBy, getDocs, updateDoc, doc, Timestamp, onSnapshot, deleteDoc } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { Invoice } from '../../types';
 import InvoicePDFGenerator from './InvoicePDFGenerator';
 import { useInvoicing } from '../../hooks/useInvoicing';
 import { sendInvoiceEmail, getEmailStatusText, canSendProformaEmail, canSendFinalEmail } from '../../services/emailService';
-import { FileText, Eye, Calendar, Euro, User, CheckCircle, Clock, AlertCircle, CreditCard, Send, Search, Filter } from 'lucide-react';
+import { FileText, Eye, Calendar, Euro, User, CheckCircle, Clock, AlertCircle, CreditCard, Send, Search, Filter, Trash2, Edit2 } from 'lucide-react';
 
 export default function InvoicesList() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -25,6 +25,16 @@ export default function InvoicesList() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedYear, setSelectedYear] = useState<string | 'all'>('all');
+  const [showEditProformaModal, setShowEditProformaModal] = useState(false);
+  const [editProforma, setEditProforma] = useState<Invoice | null>(null);
+  const [editPatientName, setEditPatientName] = useState<string>('');
+  const [editPatientEmail, setEditPatientEmail] = useState<string>('');
+  const [editDescription, setEditDescription] = useState<string>('');
+  const [editMonth, setEditMonth] = useState<number>(1);
+  const [editYear, setEditYear] = useState<number>(2025);
+  const [editInvoiceNumber, setEditInvoiceNumber] = useState<string>('');
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [savingEdit, setSavingEdit] = useState(false);
   const { convertToFinalInvoice } = useInvoicing();
 
   const fetchInvoices = async () => {
@@ -526,6 +536,103 @@ export default function InvoicesList() {
     return () => unsubscribe();
   }, []);
 
+  // Funzione per eliminare una fattura proforma
+  const handleDeleteProforma = async (invoiceId: string) => {
+    if (!window.confirm('Sei sicuro di voler eliminare questa fattura proforma? L\'operazione è irreversibile.')) return;
+    
+    if (!db) return;
+    setDeletingId(invoiceId);
+    
+    try {
+      const invoiceRef = doc(db, 'invoices', invoiceId);
+      await deleteDoc(invoiceRef);
+      
+      setInvoices(prev => prev.filter(inv => inv.id !== invoiceId));
+      setSuccess('Fattura proforma eliminata con successo');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err: any) {
+      console.error('Errore nell\'eliminazione della fattura:', err);
+      setError('Errore nell\'eliminazione della fattura');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  // Funzione per aprire il modale di modifica proforma
+  const handleOpenEditProformaModal = (invoice: Invoice) => {
+    setEditProforma(invoice);
+    setEditPatientName(invoice.patientName);
+    setEditPatientEmail(invoice.billingInfo.email || '');
+    setEditDescription(invoice.description || '');
+    setEditMonth(invoice.month);
+    setEditYear(invoice.year);
+    setEditInvoiceNumber(invoice.invoiceNumber);
+    setShowEditProformaModal(true);
+  };
+
+  // Funzione per salvare le modifiche della proforma
+  const handleSaveProformaEdit = async () => {
+    if (!db || !editProforma) return;
+    if (!editPatientName.trim()) {
+      setError('Nome del paziente è obbligatorio');
+      return;
+    }
+    if (!editInvoiceNumber.trim()) {
+      setError('Numero fattura è obbligatorio');
+      return;
+    }
+
+    setSavingEdit(true);
+    try {
+      const invoiceRef = doc(db, 'invoices', editProforma.id);
+      
+      // Update billing info with new email and patient name
+      const updatedBillingInfo = {
+        ...editProforma.billingInfo,
+        email: editPatientEmail
+      };
+
+      // Calculate new due date based on month/year (15th of next month)
+      const newDueDate = new Date(editYear, editMonth, 15); // month is 0-indexed, so editMonth gives us next month
+
+      await updateDoc(invoiceRef, {
+        patientName: editPatientName,
+        billingInfo: updatedBillingInfo,
+        description: editDescription || '',
+        month: editMonth,
+        year: editYear,
+        invoiceNumber: editInvoiceNumber,
+        dueDate: newDueDate
+      });
+
+      // Update local state
+      setInvoices(prev => prev.map(inv => 
+        inv.id === editProforma.id 
+          ? {
+              ...inv,
+              patientName: editPatientName,
+              billingInfo: updatedBillingInfo,
+              description: editDescription || '',
+              month: editMonth,
+              year: editYear,
+              invoiceNumber: editInvoiceNumber,
+              dueDate: newDueDate
+            }
+          : inv
+      ));
+
+      setSuccess('Fattura proforma modificata con successo');
+      setShowEditProformaModal(false);
+      setEditProforma(null);
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err: any) {
+      console.error('Errore nell\'aggiornamento della fattura:', err);
+      setError('Errore nell\'aggiornamento della fattura');
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
   // Filter invoices based on search term and status
   // Filter invoices based on search term, status, and year
   const filteredInvoices = invoices.filter(invoice => {
@@ -670,31 +777,34 @@ export default function InvoicesList() {
                   <h3 className="text-lg font-semibold text-gray-800 mb-4 p-3 bg-gradient-to-r from-teal-50 to-blue-50 rounded-lg border-l-4 border-teal-600">
                     {monthYear.charAt(0).toUpperCase() + monthYear.slice(1)}
                   </h3>
-                  <table className="w-full table-fixed bg-white rounded-lg overflow-hidden border border-gray-200">
+                  <table className="w-full bg-white rounded-lg overflow-hidden border border-gray-200">
                     <thead className="bg-gray-50">
                       <tr>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-36">
+                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                           Numero Fattura
                         </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
+                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                           Paziente
                         </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-28">
-                          Data
+                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                          Periodo
                         </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-28">
+                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                          Emessa il
+                        </th>
+                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                           Scadenza
                         </th>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
+                        <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                           Importo
                         </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
+                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                           Stato
                         </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-48">
+                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                           Email
                         </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-36">
+                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Azioni
                         </th>
                       </tr>
@@ -702,116 +812,146 @@ export default function InvoicesList() {
                     <tbody className="divide-y divide-gray-200">
                       {groupedInvoices[monthYear].map((invoice) => (
                         <tr key={invoice.id} className="hover:bg-gray-50">
-                          <td className="px-4 py-4 text-sm font-medium text-gray-900 break-words">
+                          <td className="px-3 py-3 text-sm font-medium text-gray-900 whitespace-nowrap">
                             {invoice.invoiceNumber}
                           </td>
-                          <td className="px-4 py-4 text-sm text-gray-900 break-words">
+                          <td className="px-3 py-3 text-sm text-gray-900">
                             <div className="flex items-center gap-2">
-                              <User className="w-4 h-4 text-gray-400" />
-                              {invoice.patientName}
+                              <User className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                              <span className="truncate max-w-[140px]">{invoice.patientName}</span>
                             </div>
                           </td>
-                          <td className="px-4 py-4 text-sm text-gray-900">
-                            <div className="flex items-center gap-2">
-                              <Calendar className="w-4 h-4 text-gray-400" />
-                              {formatDate(invoice.createdAt)}
-                            </div>
+                          <td className="px-3 py-3 text-sm text-gray-900 whitespace-nowrap">
+                            <span className="font-medium">
+                              {new Date(invoice.year, invoice.month - 1).toLocaleDateString('it-IT', { month: 'short', year: 'numeric' })}
+                            </span>
                           </td>
-                          <td className="px-4 py-4 text-sm text-gray-900">
+                          <td className="px-3 py-3 text-sm text-gray-900 whitespace-nowrap">
+                            {formatDate(invoice.createdAt)}
+                          </td>
+                          <td className="px-3 py-3 text-sm text-gray-900 whitespace-nowrap">
                             {formatDate(invoice.dueDate)}
                           </td>
-                          <td className="px-4 py-4 text-sm font-medium text-gray-900 text-right">
-                            <div className="flex items-center justify-end gap-2">
-                              <Euro className="w-4 h-4 text-gray-400" />
-                              {formatCurrency(invoice.total)}
-                            </div>
+                          <td className="px-3 py-3 text-sm font-medium text-gray-900 text-right whitespace-nowrap">
+                            {formatCurrency(invoice.total)}
                           </td>
-                          <td className="px-4 py-4">
-                            <div className="flex items-center gap-2">
-                              {getStatusIcon(invoice.status)}
-                              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(invoice.status)}`}> 
-                                {getStatusText(invoice.status)}
-                              </span>
-                            </div>
+                          <td className="px-3 py-3">
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full whitespace-nowrap ${getStatusColor(invoice.status)}`}> 
+                              {getStatusText(invoice.status)}
+                            </span>
                           </td>
-                          <td className="px-4 py-4 text-xs text-gray-500 break-words max-w-xs">
-                            {getEmailStatusText(invoice)}
+                          <td className="px-3 py-3 text-xs text-gray-500 max-w-[180px]">
+                            <span className="line-clamp-2">{getEmailStatusText(invoice)}</span>
                           </td>
-                          <td className="px-4 py-4 text-sm text-gray-500">
-                            <div className="flex flex-wrap items-center gap-2">
+                          <td className="px-3 py-3 text-sm">
+                            <div className="flex flex-wrap items-center gap-1.5">
+                               {/* Visualizza PDF */}
                                <button
                                   onClick={() => {
                                     setSelectedInvoice(invoice);
                                     setShowPDFGenerator(true);
                                   }}
-                                  className="text-teal-600 hover:text-teal-800 transition-colors"
+                                  className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-teal-50 text-teal-700 rounded hover:bg-teal-100 transition-colors"
                                   title="Visualizza fattura"
                                 >
-                                  <Eye className="w-4 h-4" />
+                                  <Eye className="w-3.5 h-3.5" />
+                                  <span>PDF</span>
                                 </button>
 
-                                {/* Edit Price (Desktop icon action) */}
+                                {/* Modifica Prezzo */}
                                 <button
                                   onClick={() => openAdjustModal(invoice)}
-                                  className="text-yellow-600 hover:text-yellow-800 transition-colors"
+                                  className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-amber-50 text-amber-700 rounded hover:bg-amber-100 transition-colors"
                                   title="Modifica prezzo"
                                 >
-                                  <Euro className="w-4 h-4" />
+                                  <Euro className="w-3.5 h-3.5" />
+                                  <span>Prezzo</span>
                                 </button>
                                
+                               {/* Invia Email Proforma */}
                                {canSendProformaEmail(invoice) && (
                                   <button
                                     onClick={() => handleSendEmail(invoice)}
                                     disabled={sendingEmail === invoice.id}
-                                    className="text-blue-600 hover:text-blue-800 transition-colors disabled:opacity-50"
+                                    className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-blue-50 text-blue-700 rounded hover:bg-blue-100 transition-colors disabled:opacity-50"
                                     title={invoice.proformaEmailSentAt ? "Reinvia email proforma" : "Invia email proforma"}
                                   >
                                     {sendingEmail === invoice.id ? (
-                                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                                      <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-blue-600"></div>
                                     ) : (
-                                      <Send className="w-4 h-4" />
+                                      <Send className="w-3.5 h-3.5" />
                                     )}
+                                    <span>{invoice.proformaEmailSentAt ? 'Reinvia' : 'Email'}</span>
                                   </button>
                                 )}
                                 
+                                {/* Invia Email Finale */}
                                 {canSendFinalEmail(invoice) && (
                                   <button
                                     onClick={() => handleSendEmail(invoice)}
                                     disabled={sendingEmail === invoice.id}
-                                    className="text-teal-600 hover:text-teal-800 transition-colors disabled:opacity-50"
+                                    className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-teal-50 text-teal-700 rounded hover:bg-teal-100 transition-colors disabled:opacity-50"
                                     title={invoice.finalEmailSentAt ? "Reinvia email fattura finale" : "Invia email fattura finale"}
                                   >
                                     {sendingEmail === invoice.id ? (
-                                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-teal-600"></div>
+                                      <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-teal-600"></div>
                                     ) : (
-                                      <Send className="w-4 h-4" />
+                                      <Send className="w-3.5 h-3.5" />
                                     )}
+                                    <span>{invoice.finalEmailSentAt ? 'Reinvia' : 'Email'}</span>
                                   </button>
                                 )}
                                
+                               {/* Azioni Proforma */}
                                {invoice.status === 'proforma' && (
-                                 <button
-                                   onClick={async () => {
-                                     if (!window.confirm('Sei sicuro di voler convertire questa proforma in fattura finale? L\'operazione è irreversibile.')) return;
-                                     const success = await convertToFinalInvoice(invoice.id);
-                                     if (success) {
-                                       fetchInvoices(); // Refresh the list
-                                     }
-                                   }}
-                                   className="text-green-600 hover:text-green-800 transition-colors"
-                                   title="Converti in fattura finale (pagamento ricevuto)"
-                                 >
-                                   <CreditCard className="w-4 h-4" />
-                                 </button>
+                                 <>
+                                   <button
+                                     onClick={() => handleOpenEditProformaModal(invoice)}
+                                     className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-indigo-50 text-indigo-700 rounded hover:bg-indigo-100 transition-colors"
+                                     title="Modifica proforma"
+                                   >
+                                     <Edit2 className="w-3.5 h-3.5" />
+                                     <span>Modifica</span>
+                                   </button>
+                                   <button
+                                     onClick={() => handleDeleteProforma(invoice.id)}
+                                     disabled={deletingId === invoice.id}
+                                     className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-red-50 text-red-700 rounded hover:bg-red-100 transition-colors disabled:opacity-50"
+                                     title="Elimina proforma"
+                                   >
+                                     {deletingId === invoice.id ? (
+                                       <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-red-600"></div>
+                                     ) : (
+                                       <Trash2 className="w-3.5 h-3.5" />
+                                     )}
+                                     <span>Elimina</span>
+                                   </button>
+                                   <button
+                                     onClick={async () => {
+                                       if (!window.confirm('Sei sicuro di voler convertire questa proforma in fattura finale? L\'operazione è irreversibile.')) return;
+                                       const success = await convertToFinalInvoice(invoice.id);
+                                       if (success) {
+                                         fetchInvoices();
+                                       }
+                                     }}
+                                     className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-green-50 text-green-700 rounded hover:bg-green-100 transition-colors"
+                                     title="Converti in fattura finale (pagamento ricevuto)"
+                                   >
+                                     <CreditCard className="w-3.5 h-3.5" />
+                                     <span>Converti</span>
+                                   </button>
+                                 </>
                                )}
                                
+                               {/* Marca come pagata */}
                                {invoice.status === 'sent' && (
                                  <button
                                    onClick={() => updateInvoiceStatus(invoice.id, 'paid')}
-                                   className="text-green-600 hover:text-green-800 transition-colors"
+                                   className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-green-50 text-green-700 rounded hover:bg-green-100 transition-colors"
                                    title="Marca come pagata"
                                  >
-                                   <CheckCircle className="w-4 h-4" />
+                                   <CheckCircle className="w-3.5 h-3.5" />
+                                   <span>Pagata</span>
                                  </button>
                                )}
                              </div>
@@ -856,9 +996,11 @@ export default function InvoicesList() {
                           <div>
                             <div className="flex items-center gap-2 text-gray-600 mb-1">
                               <Calendar className="w-4 h-4" />
-                              <span className="font-medium">Data:</span>
+                              <span className="font-medium">Periodo:</span>
                             </div>
-                            <div className="text-gray-900">{formatDate(invoice.createdAt)}</div>
+                            <div className="text-gray-900 font-semibold">
+                              {new Date(invoice.year, invoice.month - 1).toLocaleDateString('it-IT', { month: 'long', year: 'numeric' })}
+                            </div>
                           </div>
                           <div>
                             <div className="flex items-center gap-2 text-gray-600 mb-1">
@@ -870,6 +1012,9 @@ export default function InvoicesList() {
                         </div>
                         
                         <div className="text-xs text-gray-500 mb-4">
+                          <div className="mb-1">
+                            <span className="font-medium">Emessa il:</span> {formatDate(invoice.createdAt)}
+                          </div>
                           <div className="mb-1">
                             <span className="font-medium">Scadenza:</span> {formatDate(invoice.dueDate)}
                           </div>
@@ -929,19 +1074,40 @@ export default function InvoicesList() {
                             )}
                            
                            {invoice.status === 'proforma' && (
-                             <button
-                               onClick={async () => {
-                                 if (!window.confirm('Sei sicuro di voler convertire questa proforma in fattura finale? L\'operazione è irreversibile.')) return;
-                                 const success = await convertToFinalInvoice(invoice.id);
-                                 if (success) {
-                                   fetchInvoices();
-                                 }
-                               }}
-                               className="flex items-center gap-2 px-3 py-2 text-sm bg-green-50 text-green-700 rounded-md hover:bg-green-100 transition-colors"
-                             >
-                               <CreditCard className="w-4 h-4" />
-                               Converti
-                             </button>
+                             <>
+                               <button
+                                 onClick={() => handleOpenEditProformaModal(invoice)}
+                                 className="flex items-center gap-2 px-3 py-2 text-sm bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100 transition-colors"
+                               >
+                                 <Edit2 className="w-4 h-4" />
+                                 Modifica
+                               </button>
+                               <button
+                                 onClick={() => handleDeleteProforma(invoice.id)}
+                                 disabled={deletingId === invoice.id}
+                                 className="flex items-center gap-2 px-3 py-2 text-sm bg-red-50 text-red-700 rounded-md hover:bg-red-100 transition-colors disabled:opacity-50"
+                               >
+                                 {deletingId === invoice.id ? (
+                                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+                                 ) : (
+                                   <Trash2 className="w-4 h-4" />
+                                 )}
+                                 Elimina
+                               </button>
+                               <button
+                                 onClick={async () => {
+                                   if (!window.confirm('Sei sicuro di voler convertire questa proforma in fattura finale? L\'operazione è irreversibile.')) return;
+                                   const success = await convertToFinalInvoice(invoice.id);
+                                   if (success) {
+                                     fetchInvoices();
+                                   }
+                                 }}
+                                 className="flex items-center gap-2 px-3 py-2 text-sm bg-green-50 text-green-700 rounded-md hover:bg-green-100 transition-colors"
+                               >
+                                 <CreditCard className="w-4 h-4" />
+                                 Converti
+                               </button>
+                             </>
                            )}
                            
                            {invoice.status === 'sent' && (
@@ -1112,6 +1278,156 @@ export default function InvoicesList() {
                   className="px-4 py-2 rounded-md bg-teal-600 text-white hover:bg-teal-700 disabled:opacity-50"
                 >
                   {updatingPrice ? 'Salvataggio…' : 'Salva'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Proforma Modal */}
+      {showEditProformaModal && editProforma && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 sticky top-0 bg-white">
+              <h3 className="text-lg font-semibold text-gray-900">Modifica Fattura Proforma</h3>
+              <button
+                onClick={() => {
+                  setShowEditProformaModal(false);
+                  setEditProforma(null);
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-4 space-y-4">
+              {/* Numero Fattura */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Numero Fattura *
+                </label>
+                <input
+                  type="text"
+                  value={editInvoiceNumber}
+                  onChange={(e) => setEditInvoiceNumber(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500"
+                  placeholder="INV-202512-XXXXX"
+                />
+              </div>
+
+              {/* Mese e Anno */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Mese *
+                  </label>
+                  <select
+                    value={editMonth}
+                    onChange={(e) => setEditMonth(parseInt(e.target.value))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500"
+                  >
+                    <option value={1}>Gennaio</option>
+                    <option value={2}>Febbraio</option>
+                    <option value={3}>Marzo</option>
+                    <option value={4}>Aprile</option>
+                    <option value={5}>Maggio</option>
+                    <option value={6}>Giugno</option>
+                    <option value={7}>Luglio</option>
+                    <option value={8}>Agosto</option>
+                    <option value={9}>Settembre</option>
+                    <option value={10}>Ottobre</option>
+                    <option value={11}>Novembre</option>
+                    <option value={12}>Dicembre</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Anno *
+                  </label>
+                  <select
+                    value={editYear}
+                    onChange={(e) => setEditYear(parseInt(e.target.value))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500"
+                  >
+                    <option value={2024}>2024</option>
+                    <option value={2025}>2025</option>
+                    <option value={2026}>2026</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Nome Paziente */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nome Paziente *
+                </label>
+                <input
+                  type="text"
+                  value={editPatientName}
+                  onChange={(e) => setEditPatientName(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500"
+                  placeholder="Nome del paziente"
+                />
+              </div>
+
+              {/* Email Paziente */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email del Paziente
+                </label>
+                <input
+                  type="email"
+                  value={editPatientEmail}
+                  onChange={(e) => setEditPatientEmail(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500"
+                  placeholder="email@example.com"
+                />
+              </div>
+
+              {/* Descrizione */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Descrizione (opzionale)
+                </label>
+                <textarea
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                  rows={2}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500"
+                  placeholder="Aggiungi una descrizione..."
+                />
+              </div>
+
+              {/* Info Box */}
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm">
+                <div className="flex justify-between mb-2">
+                  <span className="text-gray-600">Data Creazione:</span>
+                  <span className="font-medium">{formatDate(editProforma.createdAt)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Importo Totale:</span>
+                  <span className="font-medium text-teal-600">{formatCurrency(editProforma.total)}</span>
+                </div>
+              </div>
+
+              {/* Buttons */}
+              <div className="flex gap-2 justify-end pt-4 border-t border-gray-200">
+                <button
+                  onClick={() => {
+                    setShowEditProformaModal(false);
+                    setEditProforma(null);
+                  }}
+                  className="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-100"
+                >
+                  Annulla
+                </button>
+                <button
+                  onClick={handleSaveProformaEdit}
+                  disabled={savingEdit}
+                  className="px-4 py-2 rounded-md bg-teal-600 text-white hover:bg-teal-700 disabled:opacity-50"
+                >
+                  {savingEdit ? 'Salvataggio…' : 'Salva Modifiche'}
                 </button>
               </div>
             </div>
