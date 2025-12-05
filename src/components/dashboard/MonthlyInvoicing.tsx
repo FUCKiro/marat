@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { useInvoicing } from '../../hooks/useInvoicing';
-import { Calendar, FileText, Users, Euro, Calculator, AlertTriangle, CheckCircle, Info, X } from 'lucide-react';
+import { Calendar, FileText, Users, Euro, Calculator, AlertTriangle, CheckCircle, Info, X, Plus } from 'lucide-react';
 import { Invoice } from '../../types';
 
 export default function MonthlyInvoicing() {
@@ -13,6 +13,7 @@ export default function MonthlyInvoicing() {
     monthlyTotals,
     calculateMonthlyTotals,
     generateAllInvoices,
+    generateInvoice,
     clearMonthlyTotals
   } = useInvoicing();
 
@@ -36,6 +37,7 @@ export default function MonthlyInvoicing() {
   const [loadingExisting, setLoadingExisting] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [missingPrices, setMissingPrices] = useState<string[]>([]);
+  const [generatingSingle, setGeneratingSingle] = useState<string | null>(null);
 
   const months = [
     'Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
@@ -125,6 +127,19 @@ export default function MonthlyInvoicing() {
     if (invoices && invoices.length > 0) {
       setCalculationDone(false);
       fetchExistingInvoices(); // Ricarica le fatture esistenti
+    }
+  };
+
+  // Genera proforma per singolo paziente
+  const handleGenerateSingle = async (patientTotal: typeof monthlyTotals[0]) => {
+    setGeneratingSingle(patientTotal.patientId);
+    try {
+      const invoice = await generateInvoice(patientTotal, selectedYear, selectedMonth);
+      if (invoice) {
+        fetchExistingInvoices(); // Ricarica le fatture esistenti
+      }
+    } finally {
+      setGeneratingSingle(null);
     }
   };
 
@@ -363,6 +378,7 @@ export default function MonthlyInvoicing() {
                     <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">Ore Totali</th>
                     <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">Importo</th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Terapie</th>
+                    <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">Azioni</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -403,6 +419,29 @@ export default function MonthlyInvoicing() {
                               {item.therapyType}{idx < total.items.length - 1 ? ', ' : ''}
                             </span>
                           ))}
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          {!hasExisting && !hasMissingPrice && (
+                            <button
+                              onClick={() => handleGenerateSingle(total)}
+                              disabled={generatingSingle === total.patientId}
+                              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-teal-600 text-white rounded-md hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                              title="Genera proforma per questo paziente"
+                            >
+                              {generatingSingle === total.patientId ? (
+                                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                              ) : (
+                                <Plus className="w-3 h-3" />
+                              )}
+                              <span>Genera</span>
+                            </button>
+                          )}
+                          {hasExisting && (
+                            <span className="text-xs text-gray-400">—</span>
+                          )}
+                          {!hasExisting && hasMissingPrice && (
+                            <span className="text-xs text-red-500">Configura prezzi</span>
+                          )}
                         </td>
                       </tr>
                     );
@@ -473,6 +512,24 @@ export default function MonthlyInvoicing() {
                           ))}
                         </div>
                       </div>
+                      
+                      {/* Pulsante Genera per Mobile */}
+                      {!hasExisting && !hasMissingPrice && (
+                        <div className="mt-4 pt-4 border-t border-gray-100">
+                          <button
+                            onClick={() => handleGenerateSingle(total)}
+                            disabled={generatingSingle === total.patientId}
+                            className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium bg-teal-600 text-white rounded-md hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          >
+                            {generatingSingle === total.patientId ? (
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                            ) : (
+                              <Plus className="w-4 h-4" />
+                            )}
+                            <span>Genera Proforma</span>
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
