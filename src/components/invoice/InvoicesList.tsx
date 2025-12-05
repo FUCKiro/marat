@@ -5,7 +5,7 @@ import { Invoice } from '../../types';
 import InvoicePDFGenerator from './InvoicePDFGenerator';
 import { useInvoicing } from '../../hooks/useInvoicing';
 import { sendInvoiceEmail, getEmailStatusText, canSendProformaEmail, canSendFinalEmail } from '../../services/emailService';
-import { FileText, Eye, Calendar, Euro, User, CheckCircle, Clock, AlertCircle, CreditCard, Send, Search, Filter, Trash2, Edit2 } from 'lucide-react';
+import { FileText, Eye, Calendar, Euro, User, CheckCircle, Clock, AlertCircle, CreditCard, Send, Search, Filter, Trash2, Edit2, TrendingUp, ChevronUp, ChevronDown, Banknote } from 'lucide-react';
 
 export default function InvoicesList() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -25,6 +25,13 @@ export default function InvoicesList() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedYear, setSelectedYear] = useState<string | 'all'>('all');
+  const [selectedMonth, setSelectedMonth] = useState<string | 'all'>('all');
+  const [sortField, setSortField] = useState<'date' | 'amount' | 'status' | 'patient'>('date');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [invoiceToDelete, setInvoiceToDelete] = useState<Invoice | null>(null);
+  const [markingAsPaid, setMarkingAsPaid] = useState<string | null>(null);
   const [showEditProformaModal, setShowEditProformaModal] = useState(false);
   const [editProforma, setEditProforma] = useState<Invoice | null>(null);
   const [editPatientName, setEditPatientName] = useState<string>('');
@@ -36,6 +43,12 @@ export default function InvoicesList() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [savingEdit, setSavingEdit] = useState(false);
   const { convertToFinalInvoice } = useInvoicing();
+
+  // Mesi in italiano
+  const monthNames = [
+    'Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
+    'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'
+  ];
 
   const fetchInvoices = async () => {
     if (!db) {
@@ -54,8 +67,7 @@ export default function InvoicesList() {
         return {
           id: doc.id,
           ...data,
-          createdAt: (data.createdAt as Timestamp).toDate(),
-          dueDate: (data.dueDate as Timestamp).toDate()
+          createdAt: (data.createdAt as Timestamp).toDate()
         } as Invoice;
       });
       
@@ -172,8 +184,6 @@ export default function InvoicesList() {
         return <CheckCircle className="w-4 h-4 text-blue-500" />;
       case 'paid':
         return <CheckCircle className="w-4 h-4 text-green-500" />;
-      case 'overdue':
-        return <AlertCircle className="w-4 h-4 text-red-500" />;
       case 'closed':
         return <CheckCircle className="w-4 h-4 text-gray-500" />;
       default:
@@ -191,8 +201,6 @@ export default function InvoicesList() {
         return 'Inviata';
       case 'paid':
         return 'Pagata';
-      case 'overdue':
-        return 'Scaduta';
       case 'closed':
         return 'Chiusa';
       default:
@@ -210,8 +218,6 @@ export default function InvoicesList() {
         return 'bg-blue-100 text-blue-800';
       case 'paid':
         return 'bg-green-100 text-green-800';
-      case 'overdue':
-        return 'bg-red-100 text-red-800';
       case 'closed':
         return 'bg-gray-100 text-gray-800';
       default:
@@ -297,9 +303,6 @@ export default function InvoicesList() {
                   </p>
                   <p style="margin: 2px 0; font-size: 10px; color: #666;">
                     Data: ${new Intl.DateTimeFormat('it-IT').format(invoice.createdAt)}
-                  </p>
-                  <p style="margin: 2px 0; font-size: 10px; color: #666;">
-                    Scadenza: ${new Intl.DateTimeFormat('it-IT').format(invoice.dueDate)}
                   </p>
                 </div>
               </div>
@@ -519,8 +522,7 @@ export default function InvoicesList() {
           return {
             id: doc.id,
             ...data,
-            createdAt: (data.createdAt as Timestamp).toDate(),
-            dueDate: (data.dueDate as Timestamp).toDate()
+            createdAt: (data.createdAt as Timestamp).toDate()
           } as Invoice;
         });
         setInvoices(invoicesData);
@@ -536,25 +538,56 @@ export default function InvoicesList() {
     return () => unsubscribe();
   }, []);
 
-  // Funzione per eliminare una fattura proforma
-  const handleDeleteProforma = async (invoiceId: string) => {
-    if (!window.confirm('Sei sicuro di voler eliminare questa fattura proforma? L\'operazione è irreversibile.')) return;
+  // Funzione per aprire il modale di conferma eliminazione
+  const openDeleteConfirmModal = (invoice: Invoice) => {
+    setInvoiceToDelete(invoice);
+    setDeleteConfirmText('');
+    setShowDeleteConfirmModal(true);
+  };
+
+  // Funzione per eliminare una fattura proforma con conferma forte
+  const handleDeleteProforma = async () => {
+    if (!invoiceToDelete || !db) return;
     
-    if (!db) return;
-    setDeletingId(invoiceId);
+    setDeletingId(invoiceToDelete.id);
     
     try {
-      const invoiceRef = doc(db, 'invoices', invoiceId);
+      const invoiceRef = doc(db, 'invoices', invoiceToDelete.id);
       await deleteDoc(invoiceRef);
       
-      setInvoices(prev => prev.filter(inv => inv.id !== invoiceId));
+      setInvoices(prev => prev.filter(inv => inv.id !== invoiceToDelete.id));
       setSuccess('Fattura proforma eliminata con successo');
+      setShowDeleteConfirmModal(false);
+      setInvoiceToDelete(null);
+      setDeleteConfirmText('');
       setTimeout(() => setSuccess(''), 3000);
     } catch (err: any) {
       console.error('Errore nell\'eliminazione della fattura:', err);
       setError('Errore nell\'eliminazione della fattura');
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  // Funzione per segnare una fattura come pagata
+  const handleMarkAsPaid = async (invoice: Invoice) => {
+    if (!db) return;
+    
+    setMarkingAsPaid(invoice.id);
+    try {
+      const invoiceRef = doc(db, 'invoices', invoice.id);
+      await updateDoc(invoiceRef, { status: 'paid' });
+      
+      setInvoices(prev => prev.map(inv => 
+        inv.id === invoice.id ? { ...inv, status: 'paid' as const } : inv
+      ));
+      setSuccess(`Fattura ${invoice.invoiceNumber} segnata come pagata`);
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err: any) {
+      console.error('Errore nel segnare come pagata:', err);
+      setError('Errore nell\'aggiornamento dello stato');
+    } finally {
+      setMarkingAsPaid(null);
     }
   };
 
@@ -592,17 +625,13 @@ export default function InvoicesList() {
         email: editPatientEmail
       };
 
-      // Calculate new due date based on month/year (15th of next month)
-      const newDueDate = new Date(editYear, editMonth, 15); // month is 0-indexed, so editMonth gives us next month
-
       await updateDoc(invoiceRef, {
         patientName: editPatientName,
         billingInfo: updatedBillingInfo,
         description: editDescription || '',
         month: editMonth,
         year: editYear,
-        invoiceNumber: editInvoiceNumber,
-        dueDate: newDueDate
+        invoiceNumber: editInvoiceNumber
       });
 
       // Update local state
@@ -615,8 +644,7 @@ export default function InvoicesList() {
               description: editDescription || '',
               month: editMonth,
               year: editYear,
-              invoiceNumber: editInvoiceNumber,
-              dueDate: newDueDate
+              invoiceNumber: editInvoiceNumber
             }
           : inv
       ));
@@ -633,8 +661,7 @@ export default function InvoicesList() {
     }
   };
 
-  // Filter invoices based on search term and status
-  // Filter invoices based on search term, status, and year
+  // Filter invoices based on search term, status, year, and month
   const filteredInvoices = invoices.filter(invoice => {
     const matchesSearch = searchTerm === '' || 
       invoice.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -642,21 +669,67 @@ export default function InvoicesList() {
     
     const matchesStatus = statusFilter === 'all' || invoice.status === statusFilter;
     
-    const matchesYear = selectedYear === 'all' || invoice.createdAt.getFullYear().toString() === selectedYear;
+    const matchesYear = selectedYear === 'all' || invoice.year.toString() === selectedYear;
     
-    return matchesSearch && matchesStatus && matchesYear;
+    const matchesMonth = selectedMonth === 'all' || invoice.month.toString() === selectedMonth;
+    
+    return matchesSearch && matchesStatus && matchesYear && matchesMonth;
   });
 
-  // Get available years from invoices
-  const availableYears = Array.from(new Set(invoices.map(inv => inv.createdAt.getFullYear())))
+  // Sort filtered invoices based on sortField and sortDirection
+  const sortedFilteredInvoices = [...filteredInvoices].sort((a, b) => {
+    let comparison = 0;
+    switch (sortField) {
+      case 'date':
+        comparison = a.createdAt.getTime() - b.createdAt.getTime();
+        break;
+      case 'amount':
+        comparison = a.total - b.total;
+        break;
+      case 'status':
+        const statusOrder = { proforma: 0, final: 1, sent: 2, paid: 3, closed: 4 };
+        comparison = statusOrder[a.status] - statusOrder[b.status];
+        break;
+      case 'patient':
+        comparison = a.patientName.localeCompare(b.patientName);
+        break;
+    }
+    return sortDirection === 'asc' ? comparison : -comparison;
+  });
+
+  // Handle column sort
+  const handleSort = (field: 'date' | 'amount' | 'status' | 'patient') => {
+    if (sortField === field) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('desc');
+    }
+  };
+
+  // Get available years from invoices (based on period, not creation date)
+  const availableYears = Array.from(new Set(invoices.map(inv => inv.year)))
     .sort((a, b) => b - a);
 
-  // Group invoices by month
-  const groupedInvoices = filteredInvoices.reduce((acc, invoice) => {
-    const monthYear = invoice.createdAt.toLocaleDateString('it-IT', {
-      year: 'numeric',
-      month: 'long'
-    });
+  // Get available months based on selected year
+  const availableMonths = selectedYear !== 'all'
+    ? Array.from(new Set(invoices.filter(inv => inv.year.toString() === selectedYear).map(inv => inv.month)))
+        .sort((a, b) => b - a)
+    : [];
+
+  // Calculate statistics
+  const stats = {
+    totalInvoices: filteredInvoices.length,
+    totalAmount: filteredInvoices.reduce((sum, inv) => sum + inv.total, 0),
+    paidAmount: filteredInvoices.filter(inv => inv.status === 'paid').reduce((sum, inv) => sum + inv.total, 0),
+    pendingAmount: filteredInvoices.filter(inv => ['proforma', 'final', 'sent'].includes(inv.status)).reduce((sum, inv) => sum + inv.total, 0),
+    paidCount: filteredInvoices.filter(inv => inv.status === 'paid').length,
+    proformaCount: filteredInvoices.filter(inv => inv.status === 'proforma').length
+  };
+
+  // Group invoices by month for display
+  const groupedInvoices = sortedFilteredInvoices.reduce((acc, invoice) => {
+    const monthYear = `${monthNames[invoice.month - 1]} ${invoice.year}`;
     if (!acc[monthYear]) {
       acc[monthYear] = [];
     }
@@ -666,8 +739,10 @@ export default function InvoicesList() {
 
   // Sort months in descending order (newest first)
   const sortedMonths = Object.keys(groupedInvoices).sort((a, b) => {
-    const dateA = groupedInvoices[a][0].createdAt;
-    const dateB = groupedInvoices[b][0].createdAt;
+    const [monthA, yearA] = a.split(' ');
+    const [monthB, yearB] = b.split(' ');
+    const dateA = new Date(parseInt(yearA), monthNames.indexOf(monthA));
+    const dateB = new Date(parseInt(yearB), monthNames.indexOf(monthB));
     return dateB.getTime() - dateA.getTime();
   });
 
@@ -690,8 +765,56 @@ export default function InvoicesList() {
 
   return (
     <div className="space-y-6">
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-white rounded-lg shadow-md p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-teal-100 rounded-lg">
+              <FileText className="w-5 h-5 text-teal-600" />
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 uppercase tracking-wide">Totale Fatture</p>
+              <p className="text-xl font-bold text-gray-800">{stats.totalInvoices}</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-lg shadow-md p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <Euro className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 uppercase tracking-wide">Importo Totale</p>
+              <p className="text-xl font-bold text-gray-800">{formatCurrency(stats.totalAmount)}</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-lg shadow-md p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-green-100 rounded-lg">
+              <Banknote className="w-5 h-5 text-green-600" />
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 uppercase tracking-wide">Incassato</p>
+              <p className="text-xl font-bold text-green-600">{formatCurrency(stats.paidAmount)}</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-lg shadow-md p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-orange-100 rounded-lg">
+              <TrendingUp className="w-5 h-5 text-orange-600" />
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 uppercase tracking-wide">Da Incassare</p>
+              <p className="text-xl font-bold text-orange-600">{formatCurrency(stats.pendingAmount)}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-3">
             <FileText className="w-6 h-6 text-teal-600" />
             <h2 className="text-2xl font-semibold text-gray-800">Storico Fatture</h2>
@@ -722,7 +845,6 @@ export default function InvoicesList() {
                 <option value="final">Finale</option>
                 <option value="sent">Inviata</option>
                 <option value="paid">Pagata</option>
-                <option value="overdue">Scaduta</option>
                 <option value="closed">Chiusa</option>
               </select>
             </div>
@@ -731,7 +853,7 @@ export default function InvoicesList() {
               <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <select
                 value={selectedYear}
-                onChange={(e) => setSelectedYear(e.target.value)}
+                onChange={(e) => { setSelectedYear(e.target.value); setSelectedMonth('all'); }}
                 className="pl-10 pr-8 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm appearance-none bg-white"
               >
                 <option value="all">Tutti gli anni</option>
@@ -743,7 +865,20 @@ export default function InvoicesList() {
               </select>
             </div>
 
-            {/* Pulsante “Normalizza IVA 0” rimosso: tutte le fatture sono IVA 0% */}
+            {selectedYear !== 'all' && availableMonths.length > 0 && (
+              <select
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm appearance-none bg-white"
+              >
+                <option value="all">Tutti i mesi</option>
+                {availableMonths.map(month => (
+                  <option key={month} value={month.toString()}>
+                    {monthNames[month - 1]}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
         </div>
 
@@ -783,23 +918,52 @@ export default function InvoicesList() {
                         <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                           Numero Fattura
                         </th>
-                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                          Paziente
+                        <th 
+                          onClick={() => handleSort('patient')}
+                          className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-gray-100 select-none"
+                        >
+                          <div className="flex items-center gap-1">
+                            Paziente
+                            {sortField === 'patient' && (
+                              sortDirection === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />
+                            )}
+                          </div>
                         </th>
                         <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                           Periodo
                         </th>
-                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                          Emessa il
+                        <th 
+                          onClick={() => handleSort('date')}
+                          className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-gray-100 select-none"
+                        >
+                          <div className="flex items-center gap-1">
+                            Emessa il
+                            {sortField === 'date' && (
+                              sortDirection === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />
+                            )}
+                          </div>
                         </th>
-                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                          Scadenza
+                        <th 
+                          onClick={() => handleSort('amount')}
+                          className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-gray-100 select-none"
+                        >
+                          <div className="flex items-center justify-end gap-1">
+                            Importo
+                            {sortField === 'amount' && (
+                              sortDirection === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />
+                            )}
+                          </div>
                         </th>
-                        <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                          Importo
-                        </th>
-                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                          Stato
+                        <th 
+                          onClick={() => handleSort('status')}
+                          className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-gray-100 select-none"
+                        >
+                          <div className="flex items-center gap-1">
+                            Stato
+                            {sortField === 'status' && (
+                              sortDirection === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />
+                            )}
+                          </div>
                         </th>
                         <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                           Email
@@ -828,9 +992,6 @@ export default function InvoicesList() {
                           </td>
                           <td className="px-3 py-3 text-sm text-gray-900 whitespace-nowrap">
                             {formatDate(invoice.createdAt)}
-                          </td>
-                          <td className="px-3 py-3 text-sm text-gray-900 whitespace-nowrap">
-                            {formatDate(invoice.dueDate)}
                           </td>
                           <td className="px-3 py-3 text-sm font-medium text-gray-900 text-right whitespace-nowrap">
                             {formatCurrency(invoice.total)}
@@ -914,7 +1075,7 @@ export default function InvoicesList() {
                                      <span>Modifica</span>
                                    </button>
                                    <button
-                                     onClick={() => handleDeleteProforma(invoice.id)}
+                                     onClick={() => openDeleteConfirmModal(invoice)}
                                      disabled={deletingId === invoice.id}
                                      className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-red-50 text-red-700 rounded hover:bg-red-100 transition-colors disabled:opacity-50"
                                      title="Elimina proforma"
@@ -943,14 +1104,19 @@ export default function InvoicesList() {
                                  </>
                                )}
                                
-                               {/* Marca come pagata */}
-                               {invoice.status === 'sent' && (
+                               {/* Segna come pagata - per fatture finali o inviate */}
+                               {(invoice.status === 'final' || invoice.status === 'sent') && (
                                  <button
-                                   onClick={() => updateInvoiceStatus(invoice.id, 'paid')}
-                                   className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-green-50 text-green-700 rounded hover:bg-green-100 transition-colors"
-                                   title="Marca come pagata"
+                                   onClick={() => handleMarkAsPaid(invoice)}
+                                   disabled={markingAsPaid === invoice.id}
+                                   className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-green-50 text-green-700 rounded hover:bg-green-100 transition-colors disabled:opacity-50"
+                                   title="Segna come pagata"
                                  >
-                                   <CheckCircle className="w-3.5 h-3.5" />
+                                   {markingAsPaid === invoice.id ? (
+                                     <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-green-600"></div>
+                                   ) : (
+                                     <Banknote className="w-3.5 h-3.5" />
+                                   )}
                                    <span>Pagata</span>
                                  </button>
                                )}
@@ -1014,9 +1180,6 @@ export default function InvoicesList() {
                         <div className="text-xs text-gray-500 mb-4">
                           <div className="mb-1">
                             <span className="font-medium">Emessa il:</span> {formatDate(invoice.createdAt)}
-                          </div>
-                          <div className="mb-1">
-                            <span className="font-medium">Scadenza:</span> {formatDate(invoice.dueDate)}
                           </div>
                           <div>
                             <span className="font-medium">Email:</span> {getEmailStatusText(invoice)}
@@ -1083,7 +1246,7 @@ export default function InvoicesList() {
                                  Modifica
                                </button>
                                <button
-                                 onClick={() => handleDeleteProforma(invoice.id)}
+                                 onClick={() => openDeleteConfirmModal(invoice)}
                                  disabled={deletingId === invoice.id}
                                  className="flex items-center gap-2 px-3 py-2 text-sm bg-red-50 text-red-700 rounded-md hover:bg-red-100 transition-colors disabled:opacity-50"
                                >
@@ -1110,12 +1273,17 @@ export default function InvoicesList() {
                              </>
                            )}
                            
-                           {invoice.status === 'sent' && (
+                           {(invoice.status === 'final' || invoice.status === 'sent') && (
                              <button
-                               onClick={() => updateInvoiceStatus(invoice.id, 'paid')}
-                               className="flex items-center gap-2 px-3 py-2 text-sm bg-green-50 text-green-700 rounded-md hover:bg-green-100 transition-colors"
+                               onClick={() => handleMarkAsPaid(invoice)}
+                               disabled={markingAsPaid === invoice.id}
+                               className="flex items-center gap-2 px-3 py-2 text-sm bg-green-50 text-green-700 rounded-md hover:bg-green-100 transition-colors disabled:opacity-50"
                              >
-                               <CheckCircle className="w-4 h-4" />
+                               {markingAsPaid === invoice.id ? (
+                                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
+                               ) : (
+                                 <Banknote className="w-4 h-4" />
+                               )}
                                Pagata
                              </button>
                            )}
@@ -1428,6 +1596,67 @@ export default function InvoicesList() {
                   className="px-4 py-2 rounded-md bg-teal-600 text-white hover:bg-teal-700 disabled:opacity-50"
                 >
                   {savingEdit ? 'Salvataggio…' : 'Salva Modifiche'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirmModal && invoiceToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-lg max-w-md w-full">
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-3 bg-red-100 rounded-full">
+                  <AlertCircle className="w-6 h-6 text-red-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Conferma Eliminazione</h3>
+                  <p className="text-sm text-gray-500">Questa azione è irreversibile</p>
+                </div>
+              </div>
+              
+              <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                <p className="text-sm text-gray-700 mb-2">
+                  Stai per eliminare la fattura proforma:
+                </p>
+                <p className="font-semibold text-gray-900">{invoiceToDelete.invoiceNumber}</p>
+                <p className="text-sm text-gray-600">{invoiceToDelete.patientName}</p>
+                <p className="text-sm text-gray-600">{formatCurrency(invoiceToDelete.total)}</p>
+              </div>
+              
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Per confermare, digita <span className="font-bold text-red-600">ELIMINA</span>
+                </label>
+                <input
+                  type="text"
+                  value={deleteConfirmText}
+                  onChange={(e) => setDeleteConfirmText(e.target.value)}
+                  placeholder="Digita ELIMINA"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                />
+              </div>
+              
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowDeleteConfirmModal(false);
+                    setInvoiceToDelete(null);
+                    setDeleteConfirmText('');
+                  }}
+                  className="flex-1 px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-100"
+                >
+                  Annulla
+                </button>
+                <button
+                  onClick={handleDeleteProforma}
+                  disabled={deleteConfirmText !== 'ELIMINA' || deletingId === invoiceToDelete.id}
+                  className="flex-1 px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {deletingId === invoiceToDelete.id ? 'Eliminazione...' : 'Elimina Fattura'}
                 </button>
               </div>
             </div>

@@ -27,7 +27,6 @@ export default function InvoicePDFGenerator({ invoice, onPDFGenerated }: Props) 
       case 'final':
       case 'sent':
       case 'paid':
-      case 'overdue':
       case 'closed':
         return 'FATTURA';
       default:
@@ -45,8 +44,6 @@ export default function InvoicePDFGenerator({ invoice, onPDFGenerated }: Props) 
         return 'Documento valido ai fini fiscali - Inviato';
       case 'paid':
         return 'Documento valido ai fini fiscali - Pagato';
-      case 'overdue':
-        return 'Documento valido ai fini fiscali - Scaduto';
       case 'closed':
         return 'Documento valido ai fini fiscali - Chiuso';
       default:
@@ -175,7 +172,6 @@ export default function InvoicePDFGenerator({ invoice, onPDFGenerated }: Props) 
                 {invoice.invoiceNumber}
               </p>
               <p className="text-sm text-gray-600 mt-2">Data: {formatDate(invoice.createdAt)}</p>
-              <p className="text-sm text-gray-600">Scadenza: {formatDate(invoice.dueDate)}</p>
               {invoice.status !== 'proforma' && (
                 <p className="text-xs text-gray-500 mt-2">{getDocumentDescription()}</p>
               )}

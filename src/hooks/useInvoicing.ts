@@ -209,8 +209,7 @@ export function useInvoicing() {
         month: month,
         year: year,
         status: 'proforma',
-        createdAt: new Date(),
-        dueDate: new Date(year, month, 15) // Due date: 15th of next month (month is 0-indexed, so month=11 for Nov becomes Dec 15)
+        createdAt: new Date()
       };
 
       console.log('Invoice data to save:', invoice);

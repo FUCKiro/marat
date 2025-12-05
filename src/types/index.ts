@@ -99,11 +99,10 @@ export interface Invoice {
   // Price adjustment: discount (negative) or surcharge (positive)
   adjustmentAmount?: number;
   adjustmentReason?: string;
-  status: 'proforma' | 'final' | 'sent' | 'paid' | 'overdue' | 'closed';
+  status: 'proforma' | 'final' | 'sent' | 'paid' | 'closed';
   createdAt: Date;
   sentAt?: Date;
   paidAt?: Date;
-  dueDate: Date;
   invoiceNumber: string;
   // Email tracking fields
   proformaEmailSentAt?: Date;

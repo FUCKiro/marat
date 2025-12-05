@@ -41,7 +41,6 @@ export const getEmailSubject = (invoice: Invoice): string => {
     case 'final':
     case 'sent':
     case 'paid':
-    case 'overdue':
     case 'closed':
       return `${baseSubject}Fattura n. ${invoice.invoiceNumber}`;
     default:
@@ -144,7 +143,6 @@ DETTAGLI FATTURA PROFORMA
 
 Numero: ${invoice.invoiceNumber}
 Data: ${formatDate(invoice.createdAt)}
-Scadenza: ${formatDate(invoice.dueDate)}
 
 ${getBillingDetails()}
 
@@ -195,7 +193,6 @@ DETTAGLI FATTURA
 
 Numero: ${invoice.invoiceNumber}
 Data: ${formatDate(invoice.createdAt)}
-Scadenza: ${formatDate(invoice.dueDate)}
 Stato: ${invoice.status === 'paid' ? 'PAGATA' : invoice.status === 'sent' ? 'INVIATA' : invoice.status === 'closed' ? 'CHIUSA' : 'FINALE'}
 
 ${getBillingDetails()}
@@ -305,7 +302,6 @@ export const sendInvoiceEmail = async (
           <h3 style="margin-top:0;">Dettagli ${isProforma ? 'Proforma' : 'Fattura'}:</h3>
           <p><strong>Numero:</strong> ${invoice.invoiceNumber}</p>
           <p><strong>Data:</strong> ${formatDate(invoice.createdAt)}</p>
-          <p><strong>Scadenza:</strong> ${formatDate(invoice.dueDate)}</p>
           <p><strong>Importo:</strong> ${formatCurrency(invoice.total)}</p>
           <p><strong>Paziente:</strong> ${invoice.patientName}</p>
         </div>
@@ -324,7 +320,6 @@ ${isProforma ? 'ATTENZIONE: Questo è un documento Proforma e non ha valore fisc
 Dettagli ${isProforma ? 'Proforma' : 'Fattura'}:
 - Numero: ${invoice.invoiceNumber}
 - Data: ${formatDate(invoice.createdAt)}
-- Scadenza: ${formatDate(invoice.dueDate)}
 - Importo: ${formatCurrency(invoice.total)}
 - Paziente: ${invoice.patientName}
 
