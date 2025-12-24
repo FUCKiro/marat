@@ -355,6 +355,21 @@ Associazione Maratonda`;
       hasAttachment: !!pdfBase64
     });
 
+    // MODALITÀ DEV: Simula invio email senza chiamare la funzione Netlify
+    if (import.meta.env.DEV && !window.location.hostname.includes('8888')) {
+      console.warn('⚠️ DEVELOPMENT MODE: Email non inviata realmente. Avvia "netlify dev" per testare l\'invio.');
+      console.log('📧 Email che sarebbe stata inviata:', emailData);
+      
+      // Simula successo
+      const now = new Date();
+      if (invoice.status === 'proforma') {
+        invoice.proformaEmailSentAt = now;
+      } else if (invoice.status === 'final' || invoice.status === 'sent' || invoice.status === 'paid' || invoice.status === 'closed') {
+        invoice.finalEmailSentAt = now;
+      }
+      return true;
+    }
+
     // Call Netlify Function (usa URL relativo per funzionare sia in dev che in produzione)
     const functionUrl = import.meta.env.DEV 
       ? 'http://localhost:9999/.netlify/functions/send-invoice'

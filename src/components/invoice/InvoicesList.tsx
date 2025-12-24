@@ -380,6 +380,14 @@ export default function InvoicesList() {
               </div>
             </div>
             
+            <!-- Notes Section -->
+            ${invoice.notes ? `
+            <div style="margin-bottom: 20px; padding: 12px; background: #f9fafb; border: 2px solid #d1d5db; border-radius: 6px; min-height: 60px;">
+              <h3 style="font-size: 11px; font-weight: 600; color: #374151; margin-bottom: 6px;">Note:</h3>
+              <p style="font-size: 10px; color: #6b7280; line-height: 1.4; white-space: pre-wrap; margin: 0;">${invoice.notes}</p>
+            </div>
+            ` : ''}
+            
             <!-- Payment Info -->
             <div style="border-top: 1px solid #e5e7eb; padding-top: 16px;">
               <div style="margin-bottom: 12px;">
