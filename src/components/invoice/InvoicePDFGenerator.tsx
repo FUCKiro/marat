@@ -65,7 +65,7 @@ export default function InvoicePDFGenerator({ invoice, onPDFGenerated }: Props) 
     try {
       // Capture the invoice as canvas
       const canvas = await html2canvas(invoiceRef.current, {
-        scale: 1.2,
+        scale: 0.85,
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff'
@@ -133,11 +133,11 @@ export default function InvoicePDFGenerator({ invoice, onPDFGenerated }: Props) 
       {/* Invoice Preview */}
       <div 
         ref={invoiceRef}
-        className="bg-white p-8 border border-gray-200 rounded-lg shadow-sm max-w-4xl mx-auto"
+        className="bg-white p-4 border border-gray-200 rounded-lg shadow-sm max-w-4xl mx-auto"
         style={{ minHeight: '297mm' }} // A4 height
       >
         {/* Header */}
-        <div className="flex justify-between items-start mb-8">
+        <div className="flex justify-between items-start mb-3">
           <div>
             <h1 className="text-3xl font-bold text-gray-800 mb-2">{getDocumentTitle()}</h1>
             <div className="text-gray-600">
@@ -211,22 +211,22 @@ export default function InvoicePDFGenerator({ invoice, onPDFGenerated }: Props) 
         </div>
 
         {/* Invoice Details */}
-        <div className="mb-8">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">Dettaglio Servizi</h2>
+        <div className="mb-3">
+          <h2 className="text-base font-semibold text-gray-800 mb-2">Dettaglio Servizi</h2>
           <div className="overflow-hidden border border-gray-200 rounded-lg">
             <table className="min-w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Descrizione
                   </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 py-1 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                     ore/incontri
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 py-1 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Sessione (esente IVA)
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 py-1 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Totale
                   </th>
                 </tr>
@@ -234,16 +234,16 @@ export default function InvoicePDFGenerator({ invoice, onPDFGenerated }: Props) 
               <tbody className="bg-white divide-y divide-gray-200">
                 {invoice.items.map((item, index) => (
                   <tr key={index}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-3 py-1 whitespace-nowrap text-xs text-gray-900">
                       {item.therapyType}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                    <td className="px-3 py-1 whitespace-nowrap text-xs text-gray-900 text-center">
                       {item.hours.toFixed(1)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                    <td className="px-3 py-1 whitespace-nowrap text-xs text-gray-900 text-right">
                       {formatCurrency(item.pricePerHour)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-right">
+                    <td className="px-3 py-1 whitespace-nowrap text-xs font-medium text-gray-900 text-right">
                       {formatCurrency(item.total)}
                     </td>
                   </tr>
@@ -254,27 +254,27 @@ export default function InvoicePDFGenerator({ invoice, onPDFGenerated }: Props) 
         </div>
 
         {/* Totals */}
-        <div className="flex justify-end mb-8">
+        <div className="flex justify-end mb-2">
           <div className="w-80">
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-2">
-              <div className="flex justify-between text-sm">
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-2 space-y-1">
+              <div className="flex justify-between text-xs">
                 <span className="text-gray-600">Subtotale:</span>
                 <span className="font-medium">{formatCurrency(invoice.subtotal)}</span>
               </div>
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-xs">
                 <span className="text-gray-600">{invoice.tax === 0 ? 'IVA: Esente (0%)' : 'IVA (22%):'}</span>
                 <span className="font-medium">{formatCurrency(invoice.tax)}</span>
               </div>
               {typeof invoice.adjustmentAmount === 'number' && invoice.adjustmentAmount !== 0 && (
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between text-xs">
                   <span className="text-gray-600">{invoice.adjustmentAmount < 0 ? 'Sconto:' : 'Adeguamento:'}</span>
                   <span className={invoice.adjustmentAmount < 0 ? 'font-medium text-red-600' : 'font-medium text-teal-700'}>
                     {formatCurrency(invoice.adjustmentAmount)}
                   </span>
                 </div>
               )}
-              <div className="border-t border-gray-300 pt-2">
-                <div className="flex justify-between text-lg font-bold">
+              <div className="border-t border-gray-300 pt-1">
+                <div className="flex justify-between text-base font-bold">
                   <span className="text-gray-800">Totale:</span>
                   <span className="text-teal-700">{formatCurrency(invoice.total)}</span>
                 </div>
@@ -285,46 +285,46 @@ export default function InvoicePDFGenerator({ invoice, onPDFGenerated }: Props) 
 
         {/* Notes Section */}
         {invoice.notes && (
-          <div className="mb-8 p-4 bg-gray-50 border-2 border-gray-300 rounded-lg min-h-20">
-            <h3 className="text-sm font-semibold text-gray-800 mb-2">Note:</h3>
-            <p className="text-sm text-gray-700 whitespace-pre-wrap">{invoice.notes}</p>
+          <div className="mb-2 p-2 bg-gray-50 border-2 border-gray-300 rounded-lg min-h-16">
+            <h3 className="text-xs font-semibold text-gray-800 mb-1">Note:</h3>
+            <p className="text-xs text-gray-700 whitespace-pre-wrap">{invoice.notes}</p>
           </div>
         )}
 
         {/* Payment Info */}
-        <div className="border-t border-gray-200 pt-6">
-          <div className="mb-4">
-            <p className="text-sm text-gray-700">
+        <div className="border-t border-gray-200 pt-2">
+          <div className="mb-2">
+            <p className="text-xs text-gray-700">
               Il conteggio delle ore è stato stabilito in base al foglio presenza dei terapisti. Ogni mese il terapista
               lascerà a casa il foglio presenze che verrà firmato di volta in volta dal genitore del bambino.
             </p>
           </div>
-          <h3 className="text-lg font-semibold text-gray-800 mb-3">Modalità di Pagamento</h3>
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <p className="text-sm text-gray-700 mb-2">
+          <h3 className="text-base font-semibold text-gray-800 mb-2">Modalità di Pagamento</h3>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-2">
+            <p className="text-xs text-gray-700 mb-1">
               <strong>Bonifico Bancario:</strong>
             </p>
-            <p className="text-sm text-gray-600">Banca: Banca di credito cooperativo di Roma-BCC</p>
-            <p className="text-sm text-gray-600">IBAN: IT 29 D 08327 03200 000000046622</p>
-            <p className="text-sm text-gray-600">Intestato a: MARATONDA SOCIETA’ COOPERATIVA SOCIALE</p>
-            <p className="text-sm text-gray-600 mt-2">
+            <p className="text-xs text-gray-600">Banca: Banca di credito cooperativo di Roma-BCC</p>
+            <p className="text-xs text-gray-600">IBAN: IT 29 D 08327 03200 000000046622</p>
+            <p className="text-xs text-gray-600">Intestato a: MARATONDA SOCIETA' COOPERATIVA SOCIALE</p>
+            <p className="text-xs text-gray-600 mt-1">
               <strong>Causale:</strong> Fattura n. {invoice.invoiceNumber}
             </p>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="mt-8 pt-6 border-t border-gray-200 text-center text-xs text-gray-500">
-          <p>
+        <div className="mt-1 pt-1 border-t border-gray-200 text-center text-xs text-gray-500">
+          <p className="text-xs">
             {invoice.status === 'proforma' 
               ? 'Questa fattura proforma è stata generata automaticamente dal sistema di gestione dell\'Associazione Maratonda'
               : 'Questa fattura è stata generata automaticamente dal sistema di gestione dell\'Associazione Maratonda'
             }
           </p>
-          <p className="mt-1">Per informazioni: associazionemaratonda@gmail.com | Tel: +39 351 479 0620</p>
-          <p className="mt-1">La famiglia riceverà entro 30 giorni lavorativi la fatturazione tramite posta elettronica dell’intero importo.</p>
+          <p className="mt-0.5 text-xs">Per informazioni: associazionemaratonda@gmail.com | Tel: +39 351 479 0620</p>
+          <p className="mt-0.5 text-xs">La famiglia riceverà entro 30 giorni lavorativi la fatturazione tramite posta elettronica dell'intero importo.</p>
           {invoice.tax === 0 && (
-            <p className="mt-2 text-gray-600">
+            <p className="mt-1 text-xs text-gray-600">
               Operazione esente IVA ai sensi dell’art. 10 DPR 633/72
             </p>
           )}
