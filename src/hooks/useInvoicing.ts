@@ -1,7 +1,58 @@
 import { useState, useEffect } from 'react';
-import { collection, query, where, getDocs, Timestamp, addDoc, doc, updateDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, Timestamp, addDoc, doc, updateDoc, orderBy, limit } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { TherapyPrice, Invoice, InvoiceItem, User, Visit, BillingInfo } from '../types';
+
+// Mappa dei mesi in italiano (completo)
+const MESI_ITALIANI: { [key: number]: string } = {
+  1: 'GENNAIO',
+  2: 'FEBBRAIO',
+  3: 'MARZO',
+  4: 'APRILE',
+  5: 'MAGGIO',
+  6: 'GIUGNO',
+  7: 'LUGLIO',
+  8: 'AGOSTO',
+  9: 'SETTEMBRE',
+  10: 'OTTOBRE',
+  11: 'NOVEMBRE',
+  12: 'DICEMBRE'
+};
+
+// Genera il prossimo numero di fattura per il mese/anno specificato
+const getNextInvoiceNumber = async (year: number, month: number): Promise<string> => {
+  if (!db) throw new Error('Database non configurato');
+  
+  const meseAbbr = MESI_ITALIANI[month];
+  const prefix = `${meseAbbr}${year}`;
+  
+  // Cerca tutte le fatture del mese/anno corrente
+  const invoicesQuery = query(
+    collection(db, 'invoices'),
+    where('month', '==', month),
+    where('year', '==', year)
+  );
+  
+  const snapshot = await getDocs(invoicesQuery);
+  
+  // Trova il numero progressivo più alto
+  let maxProgressive = 0;
+  snapshot.docs.forEach(doc => {
+    const invoiceNumber = doc.data().invoiceNumber as string;
+    // Estrai il progressivo dal formato "GEN2026-001"
+    const match = invoiceNumber.match(/-(\d+)$/);
+    if (match) {
+      const progressive = parseInt(match[1], 10);
+      if (progressive > maxProgressive) {
+        maxProgressive = progressive;
+      }
+    }
+  });
+  
+  // Nuovo progressivo = max + 1, formattato a 3 cifre
+  const newProgressive = (maxProgressive + 1).toString().padStart(3, '0');
+  return `${prefix}-${newProgressive}`;
+};
 
 interface MonthlyTotal {
   patientId: string;
@@ -171,7 +222,8 @@ export function useInvoicing() {
       console.log('Generating invoice for patient:', patientTotal.patientName);
       console.log('Patient total:', patientTotal);
       
-      const invoiceNumber = `INV-${year}${month.toString().padStart(2, '0')}-${patientTotal.patientId.slice(-6).toUpperCase()}`;
+      // Genera numero fattura con formato leggibile: GEN2026-001
+      const invoiceNumber = await getNextInvoiceNumber(year, month);
       
       // Check if invoice already exists for this patient, month, and year
       const existingInvoiceQuery = query(

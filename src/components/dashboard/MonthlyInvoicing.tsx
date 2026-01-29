@@ -606,7 +606,7 @@ export default function MonthlyInvoicing() {
                 <div className="flex items-start gap-2">
                   <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
                   <p className="text-sm text-amber-800">
-                    Le fatture proforma verranno generate con numero <strong>INV-{selectedYear}{selectedMonth.toString().padStart(2, '0')}-XXXXX</strong>.
+                    Le fatture proforma verranno generate con numero <strong>{['GENNAIO','FEBBRAIO','MARZO','APRILE','MAGGIO','GIUGNO','LUGLIO','AGOSTO','SETTEMBRE','OTTOBRE','NOVEMBRE','DICEMBRE'][selectedMonth-1]}{selectedYear}-XXX</strong>.
                     Verifica che il periodo sia corretto prima di procedere.
                   </p>
                 </div>

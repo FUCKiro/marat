@@ -1488,7 +1488,7 @@ export default function InvoicesList() {
                   value={editInvoiceNumber}
                   onChange={(e) => setEditInvoiceNumber(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500"
-                  placeholder="INV-202512-XXXXX"
+                  placeholder="GENNAIO2026-001"
                 />
               </div>
 
