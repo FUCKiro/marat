@@ -1,4 +1,4 @@
-import React from 'react';
+import { useState } from 'react';
 import { team } from '../data/team';
 import { collaborators } from '../data/collaborators';
 import { Users } from 'lucide-react';
@@ -6,8 +6,18 @@ import PageBackground3D from '../components/PageBackground3D';
 import ScrollAnimation from '../components/ScrollAnimation';
 import HoverCard from '../components/HoverCard';
 import SEO from '../components/SEO';
+import TeamMemberModal from '../components/TeamMemberModal';
+import { TeamMember } from '../types';
 
 export default function Team() {
+  const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const openModal = (member: TeamMember) => {
+    setSelectedMember(member);
+    setIsModalOpen(true);
+  };
+
   return (
     <>
       <SEO
@@ -37,17 +47,17 @@ export default function Team() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 max-w-6xl mx-auto">
           {team.map((member, index) => (
-            <ScrollAnimation 
-              key={member.name} 
-              delay={index * 0.2} 
+            <ScrollAnimation
+              key={member.name}
+              delay={index * 0.2}
             >
               <HoverCard
                 image={member.image}
                 name={member.name}
                 role={member.role}
                 briefDescription={member.briefDescription}
-                fullDescription={member.fullDescription}
                 className="shadow-lg"
+                onClick={() => openModal(member)}
               />
             </ScrollAnimation>
           ))}
@@ -71,12 +81,18 @@ export default function Team() {
                 name={collaborator.name}
                 role={collaborator.role}
                 briefDescription={collaborator.briefDescription}
-                fullDescription={collaborator.fullDescription}
                 className="shadow-lg"
+                onClick={() => openModal(collaborator)}
               />
             </ScrollAnimation>
           ))}
         </div>
+
+        <TeamMemberModal
+          member={selectedMember}
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+        />
 
         <ScrollAnimation delay={0.6} className="mt-16 bg-gray-50 p-8 rounded-lg text-center">
           <h2 className="text-2xl font-bold mb-4 text-gray-800">
