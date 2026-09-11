@@ -39,7 +39,7 @@ export default function Team() {
             <Users className="w-8 h-8 text-teal-600" />
           </div>
           <h2 className="text-3xl font-bold mb-6 text-gray-800">Esperti in Neurodiversità</h2>
-          <p className="text-xl text-gray-600">
+          <p className="text-xl text-white">
             Il nostro team multidisciplinare lavora in sinergia per garantire un supporto
             completo e personalizzato a ogni persona che si affida a noi.
           </p>
@@ -65,12 +65,12 @@ export default function Team() {
 
         <div className="mt-24 max-w-3xl mx-auto text-center mb-16">
           <h2 className="text-3xl font-bold mb-6 text-gray-800">I Nostri Collaboratori</h2>
-          <p className="text-xl text-white/80">
+          <p className="text-xl text-gray-600">
             Un team di professionisti specializzati che contribuisce al successo dei nostri programmi.
           </p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 max-w-6xl mx-auto">
           {collaborators.map((collaborator, index) => (
             <ScrollAnimation
               key={collaborator.name}

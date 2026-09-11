@@ -17,6 +17,9 @@
       "Bash(npm run build *)",
       "Bash(echo *)",
       "Bash(echo *)",
+      "Bash(echo *)",
+      "Bash(git status *)",
+      "Bash(git diff *)",
       "Bash(echo *)"
     ]
   }
