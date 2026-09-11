@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "strictness": "strict",
+    "allow": [
+      "Bash(cd /Users/Fabio/Desktop/marat-main)",
+      "Bash(find . -name \"*giaie*\" -o -name \"*giupe*\" -o -name \"*melma*\" -o -name \"*stelfru*\" -o -name \"*giuma*\" -o -name \"*manvi*\" 2>/dev/null)",
+      "Bash(git log *)",
+      "Bash(head *)",
+      "Bash(xargs grep -l \"import.*collaborators\" 2>/dev/null)",
+      "Bash(find . -name \"*.test.*\" -o -name \"*.spec.*\" 2>/dev/null)",
+      "Bash(npx tsc *)",
+      "Bash(tail *)",
+      "Bash(echo *)",
+      "Bash(file *)",
+      "Bash(sips *)",
+      "Bash(cp *)",
+      "Bash(npm run build *)",
+      "Bash(echo *)",
+      "Bash(echo *)",
+      "Bash(echo *)"
+    ]
+  }
+}

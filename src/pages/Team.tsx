@@ -39,7 +39,7 @@ export default function Team() {
             <Users className="w-8 h-8 text-teal-600" />
           </div>
           <h2 className="text-3xl font-bold mb-6 text-gray-800">Esperti in Neurodiversità</h2>
-          <p className="text-xl text-white/80">
+          <p className="text-xl text-gray-600">
             Il nostro team multidisciplinare lavora in sinergia per garantire un supporto
             completo e personalizzato a ogni persona che si affida a noi.
           </p>
