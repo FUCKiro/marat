@@ -1,4 +1,7 @@
 import { Helmet } from 'react-helmet-async';
+import { useLocation } from 'react-router-dom';
+
+const BASE_URL = 'https://associazione-maratonda.it';
 
 interface Props {
   title?: string;
@@ -11,10 +14,12 @@ interface Props {
 export default function SEO({
   title = 'Associazione Maratonda - Studio di Psicologia a Roma',
   description = 'Maratonda è uno studio di psicologia a Roma specializzato in autismo e neurodiversità. Offriamo valutazione, interventi ABA, psicoterapia e percorsi su misura per bambini, adolescenti e adulti.',
-  image = 'https://res.cloudinary.com/dlc5g3cjb/image/upload/v1733848053/Maratonda_logo_tz9x92.png',
-  url = 'https://associazione-maratonda.it',
+  image = `${BASE_URL}/og-image.jpg`,
+  url,
   type = 'website'
 }: Props) {
+  const location = useLocation();
+  const canonicalUrl = url ?? `${BASE_URL}${location.pathname}`;
   const siteTitle = title.includes('Maratonda') ? title : `${title} | Maratonda`;
 
   return (
@@ -22,13 +27,13 @@ export default function SEO({
       {/* Basic Meta Tags */}
       <title>{siteTitle}</title>
       <meta name="description" content={description} />
-      <link rel="canonical" href={url} />
+      <link rel="canonical" href={canonicalUrl} />
 
       {/* Open Graph */}
       <meta property="og:title" content={siteTitle} />
       <meta property="og:description" content={description} />
       <meta property="og:image" content={image} />
-      <meta property="og:url" content={url} />
+      <meta property="og:url" content={canonicalUrl} />
       <meta property="og:type" content={type} />
       <meta property="og:site_name" content="Maratonda" />
 
@@ -44,9 +49,7 @@ export default function SEO({
       {/* Additional Meta Tags */}
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <meta name="theme-color" content="#0D9488" />
-      <meta name="keywords" content="neurodiversità, ABA, psicoterapia, neuropsicomotricità, logopedia, Roma, terapia, sviluppo, inclusione" />
-  {/* Improved keywords for local SEO */}
-  <meta name="keywords" content="studio psicologi Roma, psicologo autismo Roma, psicologi Roma, terapia autismo Roma, Maratonda" />
+      <meta name="keywords" content="studio psicologi Roma, psicologo autismo Roma, psicologi Roma, terapia autismo Roma, ABA Roma, neurodiversità, psicoterapia, neuropsicomotricità, logopedia, Maratonda" />
       <meta name="author" content="Maratonda" />
       <meta name="robots" content="index, follow" />
       <meta name="language" content="it" />
@@ -61,8 +64,8 @@ export default function SEO({
         "@type": "LocalBusiness",
         "name": "Maratonda",
         "image": "${image}",
-        "@id": "${url}",
-        "url": "${url}",
+        "@id": "${BASE_URL}",
+        "url": "${BASE_URL}",
         "telephone": "+39 351 479 0620",
         "email": "associazionemaratonda@gmail.com",
         "address": {

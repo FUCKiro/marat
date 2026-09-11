@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import { team } from '../data/team';
 import { collaborators } from '../data/collaborators';
 import { Users } from 'lucide-react';
-import PageBackground3D from '../components/PageBackground3D';
+
+const PageBackground3D = lazy(() => import('../components/PageBackground3D'));
 import ScrollAnimation from '../components/ScrollAnimation';
 import HoverCard from '../components/HoverCard';
 import SEO from '../components/SEO';
@@ -21,12 +22,12 @@ export default function Team() {
   return (
     <>
       <SEO
-        title="Il Nostro Team"
-        description="Conosci il team di professionisti di Maratonda: psicologi, terapisti, logopedisti ed educatori specializzati nel supporto alle persone neurodiverse."
+        title="Team di specialisti per autismo e neurodiversità a Roma | Maratonda"
+        description="Il team di Maratonda a Roma: psicologi, terapisti ABA e logopedisti specializzati in autismo e neurodiversità. Professionisti certificati per valutazioni e interventi personalizzati."
         type="article"
       />
       <div className="bg-teal-600 text-white py-16">
-        <PageBackground3D pattern="grid" />
+        <Suspense fallback={null}><PageBackground3D pattern="grid" /></Suspense>
         <div className="container mx-auto px-4">
           <h1 className="text-4xl font-bold mb-6">Il Nostro Team</h1>
           <p className="text-xl">Professionisti dedicati al tuo benessere.</p>

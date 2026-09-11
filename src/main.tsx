@@ -1,10 +1,8 @@
-import { StrictMode } from 'react';
+import { StrictMode, lazy, Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import App from './App.tsx';
-import Login from './pages/Login.tsx';
-import Dashboard from './pages/Dashboard.tsx';
 import { AuthProvider } from './contexts/AuthContext';
 import ChiSiamo from './pages/ChiSiamo.tsx';
 import CosaFacciamo from './pages/CosaFacciamo.tsx';
@@ -14,6 +12,9 @@ import Autismo from './pages/Autismo.tsx';
 import Privacy from './pages/Privacy.tsx';
 import Layout from './components/Layout.tsx';
 import './index.css';
+
+const Login = lazy(() => import('./pages/Login.tsx'));
+const Dashboard = lazy(() => import('./pages/Dashboard.tsx'));
 
 const Root = () => {
   return (
@@ -30,8 +31,8 @@ const router = createBrowserRouter([
     element: <Root />,
     children: [
       { path: '/', element: <App /> },
-      { path: '/login', element: <Login /> },
-      { path: '/dashboard', element: <Dashboard /> },
+      { path: '/login', element: <Suspense fallback={null}><Login /></Suspense> },
+      { path: '/dashboard', element: <Suspense fallback={null}><Dashboard /></Suspense> },
       { path: '/chi-siamo', element: <ChiSiamo /> },
       { path: '/cosa-facciamo', element: <CosaFacciamo /> },
       { path: '/team', element: <Team /> },

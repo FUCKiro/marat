@@ -1,6 +1,8 @@
+import { lazy, Suspense } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, GraduationCap, Lightbulb, ArrowRight } from 'lucide-react';
-import PageBackground3D from '../components/PageBackground3D';
+
+const PageBackground3D = lazy(() => import('../components/PageBackground3D'));
 import ScrollAnimation from '../components/ScrollAnimation';
 import SEO from '../components/SEO';
 
@@ -13,7 +15,7 @@ export default function ChiSiamo() {
         type="article"
       />
       <div className="bg-teal-600 text-white py-16">
-        <PageBackground3D pattern="circles" />
+        <Suspense fallback={null}><PageBackground3D pattern="circles" /></Suspense>
         <div className="container mx-auto px-4">
           <h1 className="text-4xl font-bold mb-6">Chi Siamo</h1>
           <p className="text-xl">La nostra storia, i nostri valori, la nostra missione.</p>

@@ -21,7 +21,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 alt="Maratonda Logo"
                 className="w-12 h-12 rounded-full"
               />
-              <span className="text-xl font-bold">Maratonda</span>
+              <div className="flex flex-col leading-tight">
+                <span className="text-xl font-bold">Maratonda</span>
+                <span className="hidden sm:block text-xs text-teal-100">
+                  Centro per l'autismo e la neurodiversità a Roma
+                </span>
+              </div>
             </Link>
             <div className="hidden md:flex space-x-6">
               {navigation.map((item) => (

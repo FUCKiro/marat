@@ -1,6 +1,8 @@
-import PageBackground3D from '../components/PageBackground3D';
+import { lazy, Suspense } from 'react';
 import ScrollAnimation from '../components/ScrollAnimation';
 import SEO from '../components/SEO';
+
+const PageBackground3D = lazy(() => import('../components/PageBackground3D'));
 
 export default function Privacy() {
   return (
@@ -11,7 +13,7 @@ export default function Privacy() {
         type="article"
       />
       <div className="bg-teal-600 text-white py-16">
-        <PageBackground3D pattern="grid" />
+        <Suspense fallback={null}><PageBackground3D pattern="grid" /></Suspense>
         <div className="container mx-auto px-4">
           <h1 className="text-4xl font-bold mb-6">Privacy Policy</h1>
           <p className="text-xl">Informativa sul trattamento dei dati personali</p>

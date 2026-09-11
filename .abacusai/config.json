@@ -20,6 +20,11 @@
       "Bash(echo *)",
       "Bash(git status *)",
       "Bash(git diff *)",
+      "Bash(echo *)",
+      "Bash(find /Users/Fabio/Desktop/marat-main -type f -name \"index.html\" -o -name \"SEO.tsx\" -o -name \"robots.txt\" -o -name \"sitemap.xml\" -o -name \"_redirects\")",
+      "Bash(find /Users/Fabio/Desktop/marat-main/src -name \"*.tsx\" -o -name \"*.ts\")",
+      "Bash(echo *)",
+      "Bash(echo *)",
       "Bash(echo *)"
     ]
   }

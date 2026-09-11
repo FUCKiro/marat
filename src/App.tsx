@@ -14,6 +14,7 @@ function App() {
       {/* Hero Section */}
       <section className="relative min-h-[90vh] text-white">
         <Hero3D />
+        <h1 className="sr-only">Centro per l'autismo e la neurodiversità a Roma</h1>
       </section>
 
       {/* Buttons Section - Outside Hero3D */}
