@@ -21,5 +21,19 @@ export const collaborators: Collaborator[] = [
     image: '/titti-bernardo.jpg',
     briefDescription: 'Laureata in Psicologia dei processi cognitivi',
     fullDescription: 'Laureata in Psicologia dei processi cognitivi presso l\'Università degli studi della Campania Luigi Vanvitelli, iscritta al 4° anno della scuola di Psicoterapia Sistemico-Relazionale I.Te.R di Caserta, iscritta all\'ordine degli Psicologi della Campania e Tecnico del comportamento certificato Assotaba.\n\nPresso l\'associazione Maratonda svolge terapie ABA come Tecnico del comportamento.'
+  },
+  {
+    name: 'Cristian Albergatore',
+    role: 'Logopedista',
+    image: '/cristian-albergatore.jpg',
+    briefDescription: 'Empatia, ascolto attivo e una naturale carica positiva guidano la mia pratica quotidiana.',
+    fullDescription: 'Empatia, ascolto attivo e una naturale carica positiva guidano la mia pratica quotidiana. Credo in una cura che non si limita alle tecniche riabilitative, ma che accoglie la persona nella sua interezza, costruendo insieme un percorso fatto di fiducia, costanza e serenità.'
+  },
+  {
+    name: 'Simone Sforza',
+    role: 'Psicologo',
+    image: '/simone-sforza.jpg',
+    briefDescription: 'Laureato in neuroscienze cognitive e riabilitazione psicologica',
+    fullDescription: 'Laureato in neuroscienze cognitive e riabilitazione psicologica presso l\'università La Sapienza. Attualmente in formazione come psicoterapeuta cognitivo comportamentale. Si occupa di valutazione e trattamento delle neurodiversità in bambini e adolescenti, progettando interventi individualizzati basati su principi evidence based.'
   }
 ];

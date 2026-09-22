@@ -25,6 +25,8 @@
       "Bash(find /Users/Fabio/Desktop/marat-main/src -name \"*.tsx\" -o -name \"*.ts\")",
       "Bash(echo *)",
       "Bash(echo *)",
+      "Bash(echo *)",
+      "Bash(echo *)",
       "Bash(echo *)"
     ]
   }
