@@ -3,6 +3,8 @@ import { ArrowRight, Heart, Brain, Users, Sparkles, Activity, MessageSquare, Gra
 import { services } from './data/services';
 import Hero3D from './components/Hero3D';
 import SEO from './components/SEO';
+import InstagramEmbed from './components/InstagramEmbed';
+import { instagramPosts } from './data/instagramPosts';
 
 function App() {
   return (
@@ -73,6 +75,36 @@ function App() {
                 </div>
               );
             })}
+          </div>
+        </div>
+      </section>
+
+      {/* Project Section */}
+      <section className="py-16 bg-teal-50">
+        <div className="container mx-auto px-4">
+          <div className="max-w-3xl mx-auto text-center mb-10">
+            <h2 className="text-3xl font-bold mb-4 text-gray-800">ZenZazionale!</h2>
+            <p className="text-xl text-gray-600">
+              Yoga, mindfulness e movimento per ragazzi con spettro autistico e le loro famiglie. Un progetto Maratonda finanziato dal Bando per lo Sport 2025 della Fondazione Baroni.
+            </p>
+            <img
+              src="/fondazione_baroni/FONDAZIONEBARONI_LOGO.jpg"
+              alt="Logo Fondazione Baroni"
+              className="h-16 w-auto object-contain mx-auto mt-6"
+            />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-start">
+            {instagramPosts.slice(0, 3).map((url) => (
+              <InstagramEmbed key={url} url={url} />
+            ))}
+          </div>
+          <div className="text-center mt-10">
+            <Link
+              to="/progetto"
+              className="inline-flex items-center gap-2 bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition-colors"
+            >
+              Scopri il progetto <ArrowRight className="w-5 h-5" />
+            </Link>
           </div>
         </div>
       </section>
