@@ -44,12 +44,9 @@ export default function CosaFacciamo() {
             }[service.icon];
             
             return (
-              <ScrollAnimation
-                key={service.title} 
-                className="bg-white p-8 rounded-lg shadow-lg transform transition-all hover:scale-105"
-              >
+              <ScrollAnimation key={service.title}>
                 <div 
-                  className="cursor-pointer" 
+                  className="h-full bg-white p-8 rounded-lg shadow-lg cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl" 
                   onClick={() => setSelectedService(service)}
                 >
                   <div className="flex items-center mb-6">

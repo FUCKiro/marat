@@ -146,7 +146,19 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </div>
             <div>
               <h3 className="text-lg font-semibold mb-4">Partner Istituzionali</h3>
-              <p className="text-teal-200 italic">Coming Soon</p>
+              <a
+                href="https://fondazionebaroni.it/"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Fondazione Giovan Battista Baroni"
+                className="inline-block bg-white/95 hover:bg-white rounded-lg p-3 transition-colors"
+              >
+                <img
+                  src="/fondazione_baroni/Black_White_Minimalist_Professional_Initial_Logo-removebg-preview.png"
+                  alt="Fondazione Giovan Battista Baroni"
+                  className="h-16 w-auto"
+                />
+              </a>
             </div>
             <div>
               <h3 className="text-lg font-semibold mb-4">Orari</h3>
@@ -157,7 +169,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <div className="mt-8 pt-8 border-t border-teal-700 flex flex-col md:flex-row justify-between items-center text-teal-200">
             <p>&copy; {new Date().getFullYear()} Maratonda. Tutti i diritti riservati.</p>
             <div className="flex items-center space-x-6 mt-4 md:mt-0">
-              <a href="/privacy" className="hover:text-white transition-colors">Privacy Policy</a>
+              <Link to="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
               <span className="mx-4">|</span>
               <span>Progetto grafico di </span>
               <a 

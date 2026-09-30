@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Cookies from 'js-cookie';
+import { Link } from 'react-router-dom';
 import { X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -33,9 +34,9 @@ export default function CookieConsent() {
                 <p className="text-gray-700">
                   Utilizziamo i cookie per migliorare la tua esperienza sul nostro sito. 
                   Continuando a navigare, accetti la nostra{' '}
-                  <a href="/privacy" className="text-teal-600 hover:text-teal-700 underline">
+                  <Link to="/privacy" className="text-teal-600 hover:text-teal-700 underline">
                     Privacy Policy
-                  </a>
+                  </Link>
                   .
                 </p>
               </div>

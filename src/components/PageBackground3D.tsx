@@ -1,6 +1,6 @@
-import { Canvas } from '@react-three/fiber';
+import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Sphere } from '@react-three/drei';
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import * as THREE from 'three';
 
 interface Props {
@@ -8,21 +8,43 @@ interface Props {
   color?: string;
 }
 
-function Neurons() {
-  const groupRef = useRef<THREE.Group>(null);
+type Axis = 'x' | 'y' | 'z';
 
-  useEffect(() => {
-    if (!groupRef.current) return;
-    
-    const animate = () => {
-      if (groupRef.current) {
-        groupRef.current.rotation.y += 0.001;
-      }
-      requestAnimationFrame(animate);
-    };
-    
-    animate();
-  }, []);
+function useSpin(axis: Axis) {
+  const groupRef = useRef<THREE.Group>(null);
+  useFrame(() => {
+    if (groupRef.current) {
+      groupRef.current.rotation[axis] += 0.001;
+    }
+  });
+  return groupRef;
+}
+
+function Neurons({ count }: { count: number }) {
+  const groupRef = useSpin('y');
+  const instancedRef = useRef<THREE.InstancedMesh>(null);
+
+  const positions = useMemo(
+    () =>
+      Array.from({ length: count }, () => [
+        Math.random() * 4 - 2,
+        Math.random() * 4 - 2,
+        Math.random() * 4 - 2,
+      ] as const),
+    [count]
+  );
+
+  useLayoutEffect(() => {
+    const mesh = instancedRef.current;
+    if (!mesh) return;
+    const dummy = new THREE.Object3D();
+    positions.forEach(([x, y, z], i) => {
+      dummy.position.set(x, y, z);
+      dummy.updateMatrix();
+      mesh.setMatrixAt(i, dummy.matrix);
+    });
+    mesh.instanceMatrix.needsUpdate = true;
+  }, [positions]);
 
   return (
     <group ref={groupRef}>
@@ -34,38 +56,16 @@ function Neurons() {
           wireframe
         />
       </Sphere>
-      {Array.from({ length: 150 }).map((_, i) => (
-        <mesh
-          key={i}
-          position={[
-            Math.random() * 4 - 2,
-            Math.random() * 4 - 2,
-            Math.random() * 4 - 2,
-          ]}
-        >
-          <sphereGeometry args={[0.03, 8, 8]} />
-          <meshPhongMaterial color="#4fd1c5" />
-        </mesh>
-      ))}
+      <instancedMesh ref={instancedRef} args={[undefined, undefined, count]}>
+        <sphereGeometry args={[0.03, 8, 8]} />
+        <meshPhongMaterial color="#4fd1c5" />
+      </instancedMesh>
     </group>
   );
 }
 
 function Circles() {
-  const groupRef = useRef<THREE.Group>(null);
-
-  useEffect(() => {
-    if (!groupRef.current) return;
-    
-    const animate = () => {
-      if (groupRef.current) {
-        groupRef.current.rotation.z += 0.001;
-      }
-      requestAnimationFrame(animate);
-    };
-    
-    animate();
-  }, []);
+  const groupRef = useSpin('z');
 
   return (
     <group ref={groupRef}>
@@ -80,20 +80,7 @@ function Circles() {
 }
 
 function Waves() {
-  const groupRef = useRef<THREE.Group>(null);
-
-  useEffect(() => {
-    if (!groupRef.current) return;
-    
-    const animate = () => {
-      if (groupRef.current) {
-        groupRef.current.rotation.x += 0.001;
-      }
-      requestAnimationFrame(animate);
-    };
-    
-    animate();
-  }, []);
+  const groupRef = useSpin('x');
 
   return (
     <group ref={groupRef}>
@@ -108,24 +95,11 @@ function Waves() {
 }
 
 function Grid() {
-  const groupRef = useRef<THREE.Group>(null);
-
-  useEffect(() => {
-    if (!groupRef.current) return;
-    
-    const animate = () => {
-      if (groupRef.current) {
-        groupRef.current.rotation.y += 0.001;
-      }
-      requestAnimationFrame(animate);
-    };
-    
-    animate();
-  }, []);
+  const groupRef = useSpin('y');
 
   return (
     <group ref={groupRef}>
-      {Array.from({ length: 10 }).map((_, i) => 
+      {Array.from({ length: 10 }).map((_, i) =>
         Array.from({ length: 10 }).map((_, j) => (
           <mesh key={`${i}-${j}`} position={[i - 4.5, j - 4.5, 0]}>
             <boxGeometry args={[0.05, 0.05, 0.05]} />
@@ -137,27 +111,67 @@ function Grid() {
   );
 }
 
-export default function PageBackground3D({ pattern, color = '#4fd1c5' }: Props) {
-  const patterns = {
-    neurons: Neurons,
-    circles: Circles,
-    waves: Waves,
-    grid: Grid
-  };
+function useMediaQuery(query: string) {
+  const [matches, setMatches] = useState(() => window.matchMedia(query).matches);
 
-  const Pattern = patterns[pattern];
+  useEffect(() => {
+    const mql = window.matchMedia(query);
+    const onChange = () => setMatches(mql.matches);
+    mql.addEventListener('change', onChange);
+    return () => mql.removeEventListener('change', onChange);
+  }, [query]);
+
+  return matches;
+}
+
+function useIsActive(ref: React.RefObject<HTMLElement>) {
+  const [inView, setInView] = useState(true);
+  const [tabVisible, setTabVisible] = useState(() => document.visibilityState === 'visible');
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(([entry]) => setInView(entry.isIntersecting));
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [ref]);
+
+  useEffect(() => {
+    const onChange = () => setTabVisible(document.visibilityState === 'visible');
+    document.addEventListener('visibilitychange', onChange);
+    return () => document.removeEventListener('visibilitychange', onChange);
+  }, []);
+
+  return inView && tabVisible;
+}
+
+export default function PageBackground3D({ pattern }: Props) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
+  const isMobile = useMediaQuery('(max-width: 767px)');
+  const isActive = useIsActive(containerRef);
+
+  const frameloop = reducedMotion ? 'demand' : isActive ? 'always' : 'never';
 
   return (
-    <div className="absolute inset-0 -z-10 bg-gradient-to-br from-teal-600 to-teal-800">
-      <Canvas camera={{ position: [0, 0, 5] }}>
+    <div ref={containerRef} className="absolute inset-0 -z-10 bg-gradient-to-br from-teal-600 to-teal-800">
+      <Canvas
+        camera={{ position: [0, 0, 5] }}
+        dpr={[1, 1.5]}
+        gl={{ antialias: false }}
+        frameloop={frameloop}
+      >
         <ambientLight intensity={0.5} />
         <pointLight position={[10, 10, 10]} />
         <pointLight position={[-10, -10, -10]} intensity={0.5} />
-        <Pattern />
+        {pattern === 'neurons' && <Neurons count={isMobile ? 60 : 150} />}
+        {pattern === 'circles' && <Circles />}
+        {pattern === 'waves' && <Waves />}
+        {pattern === 'grid' && <Grid />}
         <OrbitControls
           enableZoom={false}
           enablePan={false}
-          autoRotate
+          autoRotate={!reducedMotion}
           autoRotateSpeed={0.5}
         />
       </Canvas>

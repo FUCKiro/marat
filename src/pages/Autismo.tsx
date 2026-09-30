@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import SEO from '../components/SEO';
 
 export default function Autismo() {
@@ -131,7 +132,7 @@ export default function Autismo() {
           </p>
 
           <div className="mt-8">
-            <a href="/contatti" className="inline-block bg-teal-600 text-white px-6 py-3 rounded-lg">Prenota una valutazione</a>
+            <Link to="/contatti" className="inline-block bg-teal-600 text-white px-6 py-3 rounded-lg">Prenota una valutazione</Link>
           </div>
 
           <h2 className="mt-12">Domande frequenti (FAQ)</h2>
