@@ -16,13 +16,6 @@ export const collaborators: Collaborator[] = [
     fullDescription: 'Laureata in Scienze del Servizio Sociale presso l\'università di Cosenza, consegue il titolo di terapista ABA dopo aver frequentato il corso RBT dell\'ente Dalla Luna e dopo successivo tericinio presso l\'Associazione Maratonda.\n\nAttualmente lavora come terapista ABA in equipe supervisionata e nelle scuole primarie dove svolge la mansione di OEPA, dopo essersi certificata presso il centro di formazione professionale Logos.'
   },
   {
-    name: 'Titti Bernardo',
-    role: 'Terapista',
-    image: '/titti-bernardo.jpg',
-    briefDescription: 'Laureata in Psicologia dei processi cognitivi',
-    fullDescription: 'Laureata in Psicologia dei processi cognitivi presso l\'Università degli studi della Campania Luigi Vanvitelli, iscritta al 4° anno della scuola di Psicoterapia Sistemico-Relazionale I.Te.R di Caserta, iscritta all\'ordine degli Psicologi della Campania e Tecnico del comportamento certificato Assotaba.\n\nPresso l\'associazione Maratonda svolge terapie ABA come Tecnico del comportamento.'
-  },
-  {
     name: 'Cristian Albergatore',
     role: 'Logopedista',
     image: '/cristian-albergatore.jpg',
